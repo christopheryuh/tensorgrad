@@ -39,7 +39,7 @@ class Tensor():
             sum += i
         out = Tensor(sum,_children=(self,),op='sum')
         def _backward():
-            self.grad = np.zeros((self.data.shape))
+            self.grad = np.zeros((*self.data.shape,))
             self.grad += out.grad
 
         out._backward = _backward
@@ -50,8 +50,8 @@ class Tensor():
         
 
         def _backward():
-            self.grad = np.zeros((*self.data.shape,*out.data.shape))
-            other.grad = np.zeros((*out.data.shape,*self.data.shape))
+            self.grad = np.zeros(self.data.shape)
+            other.grad = np.zeros(other.data.shape)
             self.grad += out.grad
             other.grad += out.grad
 
@@ -64,8 +64,9 @@ class Tensor():
         
 
         def _backward():
-            self.grad = np.zeros((*self.data.shape,*out.data.shape))
-            other.grad = np.zeros((*out.data.shape,*self.data.shape))
+            print(other.data*out.grad)
+            self.grad = np.zeros((*self.data.shape,))
+            other.grad = np.zeros((*other.data.shape,))
             self.grad += other.data*out.grad
             other.grad += self.data*out.grad
 
@@ -76,7 +77,7 @@ class Tensor():
         out = Tensor(self.data**other,_children=(self,other),op='pow')
 
         def _backward():
-            self.grad = np.zeros((*self.data.shape,*out.data.shape))
+            self.grad = np.zeros((*self.data.shape,))
             self.grad +=(other*self.data**other-1)*out.grad
             
     def __neg__(self): # -self
