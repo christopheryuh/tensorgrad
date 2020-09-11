@@ -3,7 +3,7 @@ import numpy as np
 class Tensor():
     def __init__(self,data,_children=(),op=''):
         self.data = np.array(data)
-        self.grad = None
+        self.grad = np.zeros_like(self.data)
         self._backward = lambda: None
         self._prev = set(_children)
         self.op = op 
@@ -32,15 +32,25 @@ class Tensor():
         self.grad = 1
         for t in reversed(topo):
             t._backward()
+    def broadcast(self,other):
+        assert isinstance(other,(tuple,list))
+        for axis,idx in enumerate(range(len(self.data.shape))):
+            xd, yd = (self.data.shape[idx],other[idx])
+            if xd == yd:
+                pass
+            if xd == 1 and yd > 1:
+                self.data = np.concatenate((self.data for _ in range(yd)),axis=axis)
 
-    def sum(self):
-        sum = 0
-        for i in self.data:
-            sum += i
-        out = Tensor(sum,_children=(self,),op='sum')
+
+
+    def sum(self,axis=None):
+        out = Tensor(self.data.sum(axis),_children=(self,),op='sum')
+        
         def _backward():
-            self.grad = np.zeros((*self.data.shape,))
-            self.grad += out.grad
+            if axis == None:
+                self.grad += out.grad
+            else:
+                self.grad += out.grad.reshape(*[d if d != axis else 1 for d in self.data.shape])
 
         out._backward = _backward
         return out
@@ -50,14 +60,15 @@ class Tensor():
         
 
         def _backward():
-            self.grad = np.zeros(self.data.shape)
-            other.grad = np.zeros(other.data.shape)
+
             self.grad += out.grad
             other.grad += out.grad
 
         out._backward = _backward
         
         return out
+
+    
     def __mul__(self,other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data*other.data,_children=(self,other),op='+')
@@ -65,19 +76,22 @@ class Tensor():
 
         def _backward():
             print(other.data*out.grad)
-            self.grad = np.zeros((*self.data.shape,))
-            other.grad = np.zeros((*other.data.shape,))
+            self.grad = np.zeros(self.data.shape)
+            other.grad = np.zeros(other.data.shape)
             self.grad += other.data*out.grad
             other.grad += self.data*out.grad
 
         out._backward = _backward
 
         return out
+    
+
+
     def __pow__(self,other):
         out = Tensor(self.data**other,_children=(self,other),op='pow')
 
         def _backward():
-            self.grad = np.zeros((*self.data.shape,))
+            self.grad = np.zeros(self.data.shape)
             self.grad +=(other*self.data**other-1)*out.grad
             
     def __neg__(self): # -self
