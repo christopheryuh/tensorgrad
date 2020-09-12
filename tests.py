@@ -22,7 +22,7 @@ print(x,xpt,xpt.grad)
 
 print('broadcasting')
 
-g = Tensor([1,2])
+g = Tensor([[1,2]])
 print(g.broadcast((2,1)))
 print(g)
 

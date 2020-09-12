@@ -34,12 +34,16 @@ class Tensor():
             t._backward()
     def broadcast(self,other):
         assert isinstance(other,(tuple,list))
-        for axis,idx in enumerate(range(len(self.data.shape))):
+        for ax,idx in enumerate(range(len(self.data.shape))):
             xd, yd = (self.data.shape[idx],other[idx])
             if xd == yd:
                 pass
             if xd == 1 and yd > 1:
-                self.data = np.concatenate((self.data for _ in range(yd)),axis=axis)
+                print(ax)
+                print(*[self.data[ax] for _ in range(yd)], ax)
+                print(ax)
+                self.data = np.concatenate((*(self.data for _ in range(yd))),axis=ax)
+                print('data',self.data)
 
 
 
