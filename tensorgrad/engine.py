@@ -1,12 +1,16 @@
 import numpy as np
+from tensorgrad import func
 
 class Tensor():
     def __init__(self,data,_children=(),op=''):
         self.data = np.array(data)
+        self.shape = self.data.shape
         self.grad = np.zeros_like(self.data)
         self._backward = lambda: None
         self._prev = set(_children)
         self.op = op 
+
+         
     def backward(self):
         """Perform backpropagation on this Tensor.
 
@@ -33,17 +37,39 @@ class Tensor():
         for t in reversed(topo):
             t._backward()
     def broadcast(self,other):
-        assert isinstance(other,(tuple,list))
-        for ax,idx in enumerate(range(len(self.data.shape))):
-            xd, yd = (self.data.shape[idx],other[idx])
+
+        out = self
+
+        other = other if isinstance(other,(Tensor)) else Tensor(other)
+
+        for ax in range(len(self.data.shape)):
+            xd = self.data.shape[ax]
+            yd = other.data.shape[ax]
             if xd == yd:
                 pass
-            if xd == 1 and yd > 1:
-                print(ax)
-                print(*[self.data[ax] for _ in range(yd)], ax)
-                print(ax)
-                self.data = np.concatenate((*(self.data for _ in range(yd))),axis=ax)
-                print('data',self.data)
+            
+            if yd == 1 and xd > 1:
+                pass
+
+            elif xd == 1 and yd > 1:
+                out.data = func.concat([self.data for _ in range(yd)],axis=ax)
+
+            else:
+                raise ValueError(f'Mismatched Shape, {self} and {other}')
+        
+
+        return out
+        
+        
+
+
+    def relu(self):
+        out = Tensor(np.where(self.data>0,self.data,0))
+
+        def _backward():
+            self.grad += np.where(self.data<0,self.grad,self.data)
+
+
 
 
 
@@ -60,6 +86,11 @@ class Tensor():
         return out
     def __add__(self,other):
         other = other if isinstance(other, Tensor) else Tensor(other)
+        if self.shape == other.shape:
+            pass
+        else:
+            self = self.broadcast(other)
+            other = other.broadcast(self)
         out = Tensor(self.data + other.data,_children=(self,other),op='+')
         
 
@@ -75,7 +106,13 @@ class Tensor():
     
     def __mul__(self,other):
         other = other if isinstance(other, Tensor) else Tensor(other)
+        if self.shape == other.shape:
+            pass
+        else:
+            self = self.broadcast(other)
+            other = other.broadcast(self)
         out = Tensor(self.data*other.data,_children=(self,other),op='+')
+        
         
 
         def _backward():
@@ -97,7 +134,22 @@ class Tensor():
         def _backward():
             self.grad = np.zeros(self.data.shape)
             self.grad +=(other*self.data**other-1)*out.grad
-            
+
+    def __getitem__(self,other):
+        out = Tensor(self.data[other], _children=(self,),op='get item')
+
+        def _backward():
+            self.grad[other] += out.grad
+
+        out._backward = _backward
+        return out
+    
+    def __matmul__(self,other):
+            pass
+
+
+
+
     def __neg__(self): # -self
         return self*-1
 
