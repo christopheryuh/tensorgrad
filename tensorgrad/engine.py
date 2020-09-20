@@ -88,6 +88,8 @@ class Tensor():
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
+        elif self.shape[-1] in other.shape:
+            pass
         else:
             self = self.broadcast(other)
             other = other.broadcast(self)
@@ -108,9 +110,12 @@ class Tensor():
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
+        elif self.shape[-1] in other.shape:
+            pass
         else:
             self = self.broadcast(other)
             other = other.broadcast(self)
+
         out = Tensor(self.data*other.data,_children=(self,other),op='+')
         
         
@@ -145,7 +150,11 @@ class Tensor():
         return out
     
     def __matmul__(self,other):
-            pass
+        out = Tensor(np.matmul(self.data,other.data),_children=(self,other),op='matmul')
+
+        def _backward():
+            self.grad += (out.grad @ other.data.T)
+            other.grad += (out.grad.T @ self.data).T
 
 
 
