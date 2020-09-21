@@ -1,11 +1,15 @@
 import numpy as np
 from tensorgrad import func
 
+def random(*args,**kwargs):
+    return Tensor(np.random.normal(*args,**kwargs))
+
+
 class Tensor():
     def __init__(self,data,_children=(),op=''):
         self.data = np.array(data)
         self.shape = self.data.shape
-        self.grad = np.zeros_like(self.data)
+        self.grad = np.zeros_like(self.data).astype(np.float64)
         self._backward = lambda: None
         self._prev = set(_children)
         self.op = op 
@@ -121,11 +125,10 @@ class Tensor():
         
 
         def _backward():
-            print(other.data*out.grad)
             self.grad = np.zeros(self.data.shape)
             other.grad = np.zeros(other.data.shape)
             self.grad += other.data*out.grad
-            other.grad += self.data*out.grad
+            other.grad = other.grad + (self.data*out.grad)
 
         out._backward = _backward
 
@@ -141,6 +144,7 @@ class Tensor():
             self.grad +=(other*self.data**other-1)*out.grad
 
     def __getitem__(self,other):
+        other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data[other], _children=(self,),op='get item')
 
         def _backward():
@@ -150,13 +154,16 @@ class Tensor():
         return out
     
     def __matmul__(self,other):
+        other = other if isinstance(other, Tensor) else Tensor(other)
+
         out = Tensor(np.matmul(self.data,other.data),_children=(self,other),op='matmul')
 
         def _backward():
-            self.grad += (out.grad @ other.data.T)
+            self.grad += out.grad @ other.data.T
             other.grad += (out.grad.T @ self.data).T
-
-
+        
+        out._backward = _backward
+        return out
 
 
     def __neg__(self): # -self

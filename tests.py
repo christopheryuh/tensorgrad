@@ -1,6 +1,8 @@
 import torch
 import numpy as np
+from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
+from tensorgrad.nn import Linear
 
 #TODO: make this a real testing script
 
@@ -44,5 +46,45 @@ def test_mul():
             return h.sum()
     helper(fn,fn_input)
 
+def test_broadcast_add():
+    fn_input = np.array([1,2,3,3])
+    def fn(x,pytorch=False):
+        if pytorch:
+            z = fn_input + torch.tensor([[1],[2],[3]])
+            return z.sum()
+        else:
+            z = fn_input + Tensor([[1],[2],[3]])
+            return z.sum()
+        helper(fn,fn_input)
+
+def test_matmul():
+    fn_input = np.array([[1.,2.,3.,3.],[1.,2.,3.,3.]])
+    def fn(x,pytorch=False):
+        if pytorch:
+            z = x @ torch.tensor([[1],[2],[3],[3]],dtype=torch.float32)
+            return z.sum()
+        else:
+            z = x @ np.array([[1],[2],[3],[3]])
+            return z.sum()
+    helper(fn,fn_input)
+
 test_same_shape_add()
 test_mul()
+test_broadcast_add()
+test_matmul()
+
+def make_a_linear_layer():
+    x = np.array([1,1,1]).astype(np.float32)
+    layer = Linear(3,5)
+    y = layer(x)
+    print(y)
+    z = y.sum()
+    z.backward()
+    print(layer.w,layer.b)
+    layer.zero_grad()
+    print(layer.w,layer.b)
+
+
+
+
+make_a_linear_layer()
