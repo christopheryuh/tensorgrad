@@ -18,8 +18,8 @@ class Conv2d(Module):
 class Linear(Module):
     def __init__(self,n_in,n_out,use_bias = True):
         self.use_bias = use_bias
-        self.w = random(size=(n_out,n_in))
-        self.b = random(size=(n_out,))
+        self.w = random(size=(n_out,n_in,))
+        self.b = random(size=(n_out,1))
     def parameters(self):
         return [self.w,self.b]
     def __call__(self,x):

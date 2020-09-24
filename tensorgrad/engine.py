@@ -164,6 +164,27 @@ class Tensor():
         
         out._backward = _backward
         return out
+    def __setitem__(self,idx,other):
+        other = other if isinstance(other, Tensor) else Tensor(other)
+        data = self.data.copy()
+        data[idx] = other.data
+        out = Tensor(data,_children=(self,other),op='set item',)
+
+        def _backward():
+            other.grad += out.grad[idx]
+            gradient = out.grad.copy()
+            gradient[idx] = 0.
+            self.grad += gradient
+
+
+        out._backward  = _backward
+
+
+        return out
+
+
+        
+
 
 
     def __neg__(self): # -self

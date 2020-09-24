@@ -74,17 +74,43 @@ test_broadcast_add()
 test_matmul()
 
 def make_a_linear_layer():
-    x = np.array([1,1,1]).astype(np.float32)
+    x = np.array([[1],[1],[1]]).astype(np.float32)
     layer = Linear(3,5)
     y = layer(x)
-    print(y)
+    print('output',y)
     z = y.sum()
     z.backward()
-    print(layer.w,layer.b)
+    print('with grad',layer.w,layer.b)
     layer.zero_grad()
-    print(layer.w,layer.b)
+    print('zero grad',layer.w,layer.b)
+
+def test_setitem():
+    print('Testing setitem')
+    x = Tensor([1,2,3,4])
+    z = 1
+    x[0] = z
+
+    w = x.sum()
+    w.backward()
+
+    xpt = torch.tensor([1.,2.,3.,4.])
+    xpt.requires_grad = True
+
+    zpt = 1.
+
+    xpt[0] = zpt
+
+    wpt = x.sum()
+    wpt.backward()
+
+
+    print(xpt.grad)
+
+    assert np.all(w.data == wpt.data)
+    assert np.all(x.grad == xpt.grad)
 
 
 
 
 make_a_linear_layer()
+test_setitem()
