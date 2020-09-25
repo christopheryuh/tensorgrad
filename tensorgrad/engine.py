@@ -213,4 +213,4 @@ class Tensor():
     def __rtruediv__(self, other): # other / self
         return other*self**-1
     def __repr__(self):
-        return f"Tensor with values:{self.data} and Gradient of:{self.grad}"
+        return f"Tensor with values:{self.data} and Gradient of:{self.grad} and shape of:{self.shape}"

@@ -14,16 +14,16 @@ class Conv2d(Module):
 
         assert padding in {'valid', 'same'}
 
-        self.w = random(outputs,inputs,kernel_dim,kernel_dim)
+        self.w = random((outputs,inputs,kernel_dim,kernel_dim))
         self.outs = outputs
-        self.use_bias = use_bias
-        self.image_shape = inputs.shape[-2:-1]
+        self.use_bias = use_bias 
         self.padding_style = padding
 
-        self.kh,self.kw = kernel_dim
+        self.kh = kernel_dim
+        self.kw = kernel_dim
 
         self.h2 = self.kh//2
-        self.w2 = self.wh//2
+        self.w2 = self.kh//2
 
     
         if self.use_bias:
@@ -33,7 +33,7 @@ class Conv2d(Module):
 
         def get_pixel_value(image,kernel,i,j):
 
-            kh,kw = (kernel.shape[1],kenel.shape[2])
+            kh,kw = (kernel.shape[1],kernel.shape[2])
 
             h2 = kh // 2
             w2 = kw // 2
@@ -65,11 +65,17 @@ class Conv2d(Module):
 
 
     def __call__(self,x):
+
+        x = x if isinstance(x,(Tensor)) else Tensor(x)
         
+        image_shape = (x.shape[-2],x.shape[-1])
+
+        print(image_shape)
+
         if self.padding_style == 'valid':
-            out = empty(self.outs,self.image_shape[0]-self.h2,self.image_shape[1]-self.w2)
+            out = empty((self.outs,image_shape[0]-self.h2,image_shape[1]-self.w2))
         if self.padding_style == 'same':
-            out = empty(self.outs,self.image_shape[0],self.image_shape[1])
+            out = empty((self.outs,image_shape[0],image_shape[1]))
         
         for outidx in range(len(self.w.data)):
             for image in x:
@@ -85,6 +91,7 @@ class Conv2d(Module):
         if self.use_bias:
             out = out + self.b
 
+        return out
 
 
 

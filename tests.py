@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear
+from tensorgrad.nn import Linear,Conv2d
 
 #TODO: make this a real testing script
 
@@ -67,12 +67,12 @@ def test_matmul():
             z = x @ np.array([[1],[2],[3],[3]])
             return z.sum()
     helper(fn,fn_input)
-
+'''
 test_same_shape_add()
 test_mul()
 test_broadcast_add()
 test_matmul()
-
+'''
 def make_a_linear_layer():
     x = np.array([[1],[1],[1]]).astype(np.float32)
     layer = Linear(3,5)
@@ -110,7 +110,16 @@ def test_setitem():
     assert np.all(x.grad == xpt.grad)
 
 
+#make_a_linear_layer()
+#test_setitem()
 
 
-make_a_linear_layer()
-test_setitem()
+def make_a_conv2d_layer():
+    x = np.ones((3,5,5))
+    layer = Conv2d(3,1,3,use_bias=False,padding='same')
+    
+    y = layer(x)
+
+    print(y)
+
+make_a_conv2d_layer()
