@@ -120,6 +120,10 @@ def make_a_conv2d_layer():
     
     y = layer(x)
 
-    print(y)
+    print('going backward')
+    z = y.sum()
+    z.backward()
+
+    print(layer.w)
 
 make_a_conv2d_layer()

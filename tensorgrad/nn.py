@@ -14,7 +14,7 @@ class Conv2d(Module):
 
         assert padding in {'valid', 'same'}
 
-        self.w = random((outputs,inputs,kernel_dim,kernel_dim))
+        self.w = random(size=(outputs,inputs,kernel_dim,kernel_dim))
         self.outs = outputs
         self.use_bias = use_bias 
         self.padding_style = padding
