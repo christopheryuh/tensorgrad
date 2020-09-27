@@ -116,14 +116,14 @@ def test_setitem():
 
 def make_a_conv2d_layer():
     x = np.ones((3,5,5))
-    layer = Conv2d(3,1,3,use_bias=False,padding='same')
+    layer = Conv2d(3,3,3,use_bias=False,padding='same')
     
     y = layer(x)
 
     print('going backward')
     z = y.sum()
     z.backward()
-
-    print(layer.w)
+    print(z)
+    print(layer.w.grad)
 
 make_a_conv2d_layer()

@@ -62,6 +62,12 @@ class Conv2d(Module):
                 return out
         self.padding = padding
 
+    def parameters(self):
+        if self.use_bias:
+            return [self.w,self.b]
+        else:
+            return [sefl.w,]
+
 
 
     def __call__(self,x):
