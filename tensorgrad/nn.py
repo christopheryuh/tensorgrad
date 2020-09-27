@@ -76,7 +76,6 @@ class Conv2d(Module):
         
         image_shape = (x.shape[-2],x.shape[-1])
 
-        print(image_shape)
 
         if self.padding_style == 'valid':
             out = empty((self.outs,image_shape[0]-self.h2,image_shape[1]-self.w2))
