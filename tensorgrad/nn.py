@@ -5,12 +5,12 @@ from tensorgrad.engine import random,empty,zeros,Tensor
 class Module():
     def zero_grad(self):
         for p in self.parameters():
-            p.grad[:] = 0
+            p.grad[:] = 0.
 
 
 
 class Conv2d(Module):
-    def __init__(self,inputs,outputs,kernel_dim,use_bias=True,padding='valid'):
+    def __init__(self,inputs,outputs,kernel_dim,use_bias=True,padding='valid',nonlin='relu'):
 
         assert padding in {'valid', 'same'}
 
@@ -95,14 +95,26 @@ class Conv2d(Module):
 
         if self.use_bias:
             out = out + self.b
+        
+        if self.nonlin = None:
+            return x
+        if self.nonlin  = 'relu';
+            x = x.relu
+        elif self.nonlin = 'sigmoid':
+            raise NotImplementedError
+        elif self.nonlin  = 'softmax':
+            raise NotImplementedError
+
+        return x
 
         return out
 
 
 
 class Linear(Module):
-    def __init__(self,n_in,n_out,use_bias = True):
+    def __init__(self,n_in,n_out,use_bias = True,nonlin='relu'):
         self.use_bias = use_bias
+        self.nonlin = 'relu'
         self.w = random(size=(n_out,n_in,))
         self.b = random(size=(n_out,1))
     def parameters(self):
@@ -112,5 +124,27 @@ class Linear(Module):
         x = self.w @ x
         if self.use_bias:
             x = x + self.b
+        if self.nonlin = None:
+            return x
+        if self.nonlin  = 'relu';
+            x = x.relu()
+        elif self.nonlin = 'sigmoid':
+            x = x.sigmoid()
+        elif self.nonlin  = 'softmax':
+            raise NotImplementedError
+
+
         return x
 
+
+class Model(Module):
+    def __init__(self,layers):
+        self.layers = layers
+    def add(self,layer):
+        self.layers = [*self.layers,layer]
+    def __call__(self,x):
+        for layer in self.layers:
+            x = layer(x)
+        return x
+    def parameters(self):
+        return [*layer.parameters() for layer in self.layers]

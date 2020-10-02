@@ -76,11 +76,25 @@ class Tensor():
         out = Tensor(np.where(self.data>0,self.data,0))
 
         def _backward():
-            self.grad += np.where(self.data<0,self.grad,self.data)
+            self.grad += np.where(self.data<0,self.grad,self.data) * out.grad
+        
+        out._backward = _backward
 
+        return out
 
+    def sigmoid(self):
+        out = Tensor(1/(1+np.exp(self.data)))
 
+        def _backward():
+            self.grad += ((1-out.data)*out.data) * out.grad
+        out._backward = _backward
 
+        return out
+
+    def softmax(self):
+        out = Tensor(np.exp(self.data)/np.exp(self.data).sum())
+
+        return out
 
     def sum(self,axis=None):
         out = Tensor(self.data.sum(axis),_children=(self,),op='sum')

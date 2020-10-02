@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear,Conv2d
+from tensorgrad.nn import Linear,Conv2d,Model
 
 #TODO: make this a real testing script
 
@@ -127,3 +127,17 @@ def make_a_conv2d_layer():
     print(layer.w.grad)
 
 make_a_conv2d_layer()
+
+
+print("-------Testing Conv-Net----------")
+
+def make_a_convnet():
+    from tensorflow.keras.datasets import mnist
+
+    (train_images,train_labels),(_,_) = mnist.load_data()
+
+    train_images = train_images.reshape(-1,1,28,28)
+
+    image = train_images[0].reshape(1,1,28,28)
+
+    convnet = Model()
