@@ -202,9 +202,6 @@ class Tensor():
         return out
 
 
-        
-
-
 
     def __neg__(self): # -self
         return self*-1

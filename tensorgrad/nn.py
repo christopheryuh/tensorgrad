@@ -17,6 +17,7 @@ class Conv2d(Module):
         self.w = random(size=(outputs,inputs,kernel_dim,kernel_dim))
         self.outs = outputs
         self.use_bias = use_bias 
+        self.nonlin = nonlin
         self.padding_style = padding
 
         self.kh = kernel_dim
@@ -96,14 +97,15 @@ class Conv2d(Module):
         if self.use_bias:
             out = out + self.b
         
-        if self.nonlin = None:
+        if self.nonlin == None:
             return x
-        if self.nonlin  = 'relu';
-            x = x.relu
-        elif self.nonlin = 'sigmoid':
-            raise NotImplementedError
-        elif self.nonlin  = 'softmax':
-            raise NotImplementedError
+        if self.nonlin == 'relu':
+            x = x.relu()
+        elif self.nonlin == 'sigmoid':
+            x = x.sigmoid()
+        elif self.nonlin == 'softmax':
+            x = x.softmax()
+
 
         return x
 
@@ -124,17 +126,38 @@ class Linear(Module):
         x = self.w @ x
         if self.use_bias:
             x = x + self.b
-        if self.nonlin = None:
+        if self.nonlin == None:
             return x
-        if self.nonlin  = 'relu';
+        if self.nonlin == 'relu':
             x = x.relu()
-        elif self.nonlin = 'sigmoid':
+        elif self.nonlin == 'sigmoid':
             x = x.sigmoid()
-        elif self.nonlin  = 'softmax':
-            raise NotImplementedError
+        elif self.nonlin == 'softmax':
+            x = x.softmax()
 
 
         return x
+
+
+class MaxPool2d():
+    def __init__(self,dimesions):
+        self.dimensions = dimesions
+        
+    def __call__(self,x):
+        x = x if isinstance(x,(Tensor)) else Tensor(x)
+        out = empty((x.shape[0],x.shape[1]/self.dimensions[0],x.shape[2]/self.dimensions[1]))
+        for i,image in enumerate(x):
+            for row in range((image.shape[0]/self.dimesions[0])-self.dimensions[0]):
+                for col in range((image.shape[1]/self.dimensions[1])-self.dimensions[1]):
+                    maxNum = np.max(image[row+self.dimensions[0],col+self.dimensions[1]].data)
+                    out[i,row,col] = maxNum
+
+
+
+                
+
+
+
 
 
 class Model(Module):
@@ -147,4 +170,5 @@ class Model(Module):
             x = layer(x)
         return x
     def parameters(self):
-        return [*layer.parameters() for layer in self.layers]
+        return [layer.parameters() for layer in self.layers]
+

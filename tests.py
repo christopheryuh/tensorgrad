@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear,Conv2d,Model
+from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d
 
 #TODO: make this a real testing script
 
@@ -118,16 +118,26 @@ def make_a_conv2d_layer():
     x = np.ones((3,5,5))
     layer = Conv2d(3,3,3,use_bias=False,padding='same')
     
-    y = layer(x)
+    out = layer(x)
+
 
     print('going backward')
-    z = y.sum()
+    z = out.sum()
     z.backward()
     print(z)
     print(layer.w.grad)
 
 make_a_conv2d_layer()
 
+def make_max_pooling():
+    maxp = MaxPool2d((2,2))
+    x = np.array([[1,2,3,4],[1,2,3,4],[1,2,3,4],[1,2,3,4]])
+
+    y = maxp(x)
+
+    print(y) 
+
+make_max_pooling()
 
 print("-------Testing Conv-Net----------")
 
