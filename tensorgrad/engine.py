@@ -41,10 +41,24 @@ class Tensor():
                 topo.append(t)
         build_topo(self)
 
+
+
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = 1
         for t in reversed(topo):
             t._backward()
+
+
+    def reshape(self,shape):
+            out = self.data.reshape(shape)
+
+            def _backward():
+                self.grad = self.grad.reshape(shape)*out.grad
+            
+            out._backward = _backward
+
+            return out
+    
     def broadcast(self,other):
 
         out = self
@@ -91,9 +105,17 @@ class Tensor():
 
         return out
 
-    def softmax(self):
-        out = Tensor(np.exp(self.data)/np.exp(self.data).sum())
+    def softmax(self,axis=-1):
+        out = empty(self.data.shape)
+        for i,vector in enumerate(self.data):
+            out[i] = 1/np.sum(np.exp(vector),axis=axis)*np.exp(vector)
 
+        def _backward():
+            for i, vector in enumerate(self.data):
+                self.grad[i] += (out.data - 1/np.exp(vector).sum()) * out.grad
+
+
+        out._backward = _backward
         return out
 
     def sum(self,axis=None):

@@ -2,6 +2,50 @@ import numpy as np
 
 from tensorgrad.engine import random,empty,zeros,Tensor
 
+
+def oneHot(x,depth=None):
+    assert (depth != None)
+    zeros = np.zeros(x.shape[0],depth)
+    for idx,i in enumerate(x):
+        zeros[idx][i] = 1
+    return zeros
+
+
+        
+
+
+class Crossentropy():
+    def __call__(self,y_hat,y):
+        labels = oneHot(y,depth=y_hat.shape[-1])
+        
+        out = Tensor(-1*y_hat*np.log(labels))
+        out = out.sum()
+
+        def _backward():
+            y_hat.grad += -1*labels**-1
+
+        out._backward = _backward
+        
+        return out
+        
+
+
+class Optimizer():
+    def __init__(self,parameters,lr=.001):
+        self.lr = lr
+        self.parameters = parameters
+
+
+class SGD(Optimizer):
+    def step(self):
+        for param in self.parameters:
+            param.data = param.data - (param.grad * self.lr)
+            
+
+
+
+
+
 class Module():
     def zero_grad(self):
         for p in self.parameters():
@@ -103,8 +147,6 @@ class Conv2d(Module):
             x = x.relu()
         elif self.nonlin == 'sigmoid':
             x = x.sigmoid()
-        elif self.nonlin == 'softmax':
-            x = x.softmax()
 
 
         return x
@@ -120,7 +162,10 @@ class Linear(Module):
         self.w = random(size=(n_out,n_in,))
         self.b = random(size=(n_out,1))
     def parameters(self):
-        return [self.w,self.b]
+        if self.use_bias:
+            return [self.w,self.b]
+        else:
+            return [self.w,]
     def __call__(self,x):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
         x = self.w @ x
@@ -139,22 +184,38 @@ class Linear(Module):
         return x
 
 
+class Flatten():
+    def __call__(self,x):
+
+        return x.reshape((x.shape[0],-1))
+
 class MaxPool2d():
     def __init__(self,dimesions):
         self.dimensions = dimesions
         
     def __call__(self,x):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
-        out = empty((x.shape[0],x.shape[1]/self.dimensions[0],x.shape[2]/self.dimensions[1]))
-        for i,image in enumerate(x):
-            for row in range((image.shape[0]/self.dimesions[0])-self.dimensions[0]):
-                for col in range((image.shape[1]/self.dimensions[1])-self.dimensions[1]):
-                    maxNum = np.max(image[row+self.dimensions[0],col+self.dimensions[1]].data)
-                    out[i,row,col] = maxNum
+        image = x.data
+        out = np.empty((x.shape[0],x.shape[1]//self.dimensions[0],x.shape[2]//self.dimensions[1]))
+        ismax = zeros(x.shape)
+        for row in range(image.shape[2]//self.dimensions[0]):
+            for col in range(image.shape[3]//self.dimensions[1]):
+                ismax[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] = (
+
+                    image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] == 
+                    image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True)
+
+                )
+
+                out[:,:,row,col] = image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True)
 
 
+        def _backward():
+            x.grad += (ismax  * x.data) * out.grad
 
-                
+
+        out._backward = _backward 
+        return out
 
 
 
@@ -163,12 +224,34 @@ class MaxPool2d():
 class Model(Module):
     def __init__(self,layers):
         self.layers = layers
+        self.parameters = self.layers
     def add(self,layer):
-        self.layers = [*self.layers,layer]
+        self.layers = [*self.layers,layers]
     def __call__(self,x):
         for layer in self.layers:
             x = layer(x)
         return x
     def parameters(self):
-        return [layer.parameters() for layer in self.layers]
+        for layer in self.layers:
+            self.parameters = [*self.parameters,layer]
+        return self.parameters
+    def train(self,x,y,optimizer=None,lossFn=None,epochs=1):
+        if optimizer == None:
+            opt = SGD(self.parameters)
+        else:
+            opt = optimizer
+        if lossFn == None:
+            lossFn = Crossentropy()
 
+        for epoch in range(epoch):
+            for batch in zip(x,y):
+                data, labels = batch
+                
+                y_hat = self(data)
+
+                loss = lossFn(y_hat,y)
+                
+                loss.backward()
+
+                optimizer.step()
+            print(f"epoch:{epoch + 1}\tloss:{loss}")

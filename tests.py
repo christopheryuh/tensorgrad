@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d
+from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d,Flatten
 
 #TODO: make this a real testing script
 
@@ -128,14 +128,20 @@ def make_a_conv2d_layer():
     print(layer.w.grad)
 
 make_a_conv2d_layer()
-
+print('--maxpool--')
 def make_max_pooling():
     maxp = MaxPool2d((2,2))
-    x = np.array([[1,2,3,4],[1,2,3,4],[1,2,3,4],[1,2,3,4]])
+    x = Tensor(np.array([[[1,2,3,4],
+                 [1,2,3,4],
+                 [1,2,3,4],
+                 [1,2,3,4]]]).reshape(1,1,4,4))
 
     y = maxp(x)
 
+    z = y.sum()
     print(y) 
+    z.backward()
+    print(x.grad)
 
 make_max_pooling()
 
@@ -151,3 +157,13 @@ def make_a_convnet():
     image = train_images[0].reshape(1,1,28,28)
 
     convnet = Model()
+    convnet.add(Conv2d(1,8,3))
+    convnet.add(MaxPool2d((2,2)))
+    convnet.add(Conv2d(8,16,3))
+    convnet.add(Conv2d(16,32,3))
+    convnet.add(MaxPool2d((2,2)))
+    convnet.add(Conv2d(32,32,3))
+    convnet.add(Flatten())
+    convnet.add(Linear(32*4*4,10,nonlin='softmax'))
+
+    convent.train(train_images,train_labels)
