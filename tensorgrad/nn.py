@@ -111,11 +111,15 @@ class Conv2d(Module):
         if self.use_bias:
             return [self.w,self.b]
         else:
-            return [sefl.w,]
+            return [self.w,]
 
 
 
     def __call__(self,x):
+
+
+        assert len(x.shape) == 4
+        print(x.shape)
 
         x = x if isinstance(x,(Tensor)) else Tensor(x)
         
@@ -195,11 +199,16 @@ class MaxPool2d():
         
     def __call__(self,x):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
+
+
+
         image = x.data
-        out = np.empty((x.shape[0],x.shape[1]//self.dimensions[0],x.shape[2]//self.dimensions[1]))
+        out = np.empty((x.shape[0],x.shape[1],x.shape[2]//self.dimensions[0],x.shape[3]//self.dimensions[1]))
         ismax = zeros(x.shape)
         for row in range(image.shape[2]//self.dimensions[0]):
             for col in range(image.shape[3]//self.dimensions[1]):
+                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]])
+                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].amax(axis=(2,3),keepdims=True))
                 ismax[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] = (
 
                     image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] == 
@@ -210,8 +219,13 @@ class MaxPool2d():
                 out[:,:,row,col] = image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True)
 
 
+        out = Tensor(out)
+
+
+        
         def _backward():
-            x.grad += (ismax  * x.data) * out.grad
+            print('ismax*x.datashape',(ismax  * x.data).shape)
+            x.grad += (ismax.astype(int)  * x.data)
 
 
         out._backward = _backward 

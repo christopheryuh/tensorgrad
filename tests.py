@@ -115,7 +115,7 @@ def test_setitem():
 
 
 def make_a_conv2d_layer():
-    x = np.ones((3,5,5))
+    x = np.ones((1,3,5,5))
     layer = Conv2d(3,3,3,use_bias=False,padding='same')
     
     out = layer(x)
@@ -139,7 +139,7 @@ def make_max_pooling():
     y = maxp(x)
 
     z = y.sum()
-    print(y) 
+    print(y,x) 
     z.backward()
     print(x.grad)
 
