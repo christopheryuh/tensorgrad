@@ -117,6 +117,7 @@ class Conv2d(Module):
 
 
         if padding == 'same':
+
             def padding(image):
                 out = zeros(image.shape[0]+self.h2,image.shape[1]+self.w2)
                 out[h2:h2+image.shape[0],w2:w2+image.shape[1]] = image
@@ -131,7 +132,7 @@ class Conv2d(Module):
 
 
 
-    def __call__(self,x):
+    def __call__(self,x,training=False):
 
 
         assert len(x.shape) == 4
@@ -175,7 +176,7 @@ class Linear(Module):
             return [self.w,self.b]
         else:
             return [self.w,]
-    def __call__(self,x):
+    def __call__(self,x,training=False):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
         x = self.w @ x
         if self.use_bias:
@@ -238,9 +239,9 @@ class Model(Module):
         self.parameters = self.layers
     def add(self,layer):
         self.layers = [*self.layers,layers]
-    def __call__(self,x):
+    def __call__(self,x,training=False):
         for layer in self.layers:
-            x = layer(x)
+            x = layer(x,training=True)
         return x
     def parameters(self):
         for layer in self.layers:
@@ -258,7 +259,7 @@ class Model(Module):
             for batch in zip(x,y):
                 data, labels = batch
                 
-                y_hat = self(data)
+                y_hat = self(data,training=True)
 
                 loss = lossFn(y_hat,y)
                 
@@ -266,3 +267,20 @@ class Model(Module):
 
                 optimizer.step()
             print(f"epoch:{epoch + 1}\tloss:{loss}")
+
+
+class BatchNorm():
+    def __init__(self):
+        self.running_mean = 0
+        self.running_var = 0
+        self.w = random()
+        self.b = random()
+    def __call__(self,x,training=False):
+        if training:
+            if len(x.shape) == 4:
+                mean = x.sum(axis=(0,2,3))/(x.shape[0]*x.shape[2]*x.shape[3])
+                var = (x - mean)**2
+
+                x = (x - mean)/var
+                x = self.w*x + self.b
+                

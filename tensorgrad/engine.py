@@ -53,8 +53,7 @@ class Tensor():
             out = self.data.reshape(shape)
 
             def _backward():
-                self.grad = self.grad.reshape(shape)*out.grad
-            
+                self.grad = self.grad.reshape(self.data.shape)*out.grad         
             out._backward = _backward
 
             return out
