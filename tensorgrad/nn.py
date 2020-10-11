@@ -207,16 +207,13 @@ class MaxPool2d():
         ismax = zeros(x.shape)
         for row in range(image.shape[2]//self.dimensions[0]):
             for col in range(image.shape[3]//self.dimensions[1]):
-                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]])
-                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True))
-                ismax[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] = (
 
-                    image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] == 
-                    image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True)
+                max_indices = image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].reshape(image.shape[0],image.shape[0],-1).argmax()
+                print(max_indices)
+                maxval = image[max_indices]
+                ismax[max_indices] = True
 
-                )
-
-                out[:,:,row,col] = image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True)
+                out[:,:,row,col] = maxval
 
 
         out = Tensor(out)
