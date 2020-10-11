@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d,Flatten
+from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d,Flatten,Relu,Softmax
 
 #TODO: make this a real testing script
 
@@ -158,12 +158,19 @@ def make_a_convnet():
 
     convnet = Model()
     convnet.add(Conv2d(1,8,3))
+    convnet.add(Relu())
     convnet.add(MaxPool2d((2,2)))
+    convnet.add(Relu())
     convnet.add(Conv2d(8,16,3))
+    convnet.add(Relu())
     convnet.add(Conv2d(16,32,3))
+    convnet.add(Relu())
     convnet.add(MaxPool2d((2,2)))
+    convnet.add(Relu())
     convnet.add(Conv2d(32,32,3))
+    convnet.add(Relu())
     convnet.add(Flatten())
     convnet.add(Linear(32*4*4,10,nonlin='softmax'))
+    convnet.add(Softmax())
 
     convent.train(train_images,train_labels)

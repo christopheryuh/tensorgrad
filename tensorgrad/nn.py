@@ -11,6 +11,23 @@ def oneHot(x,depth=None):
     return zeros
 
 
+
+
+class Relu():
+    def __call__(self,x):
+        return x.relu()
+
+class Sigmoid():
+    def __call__(self,x):
+        return x.sigmoid()
+
+class Softmax():
+    def __call__(self,x):
+        return x.softmax()
+        
+    
+
+
         
 
 
@@ -54,14 +71,13 @@ class Module():
 
 
 class Conv2d(Module):
-    def __init__(self,inputs,outputs,kernel_dim,use_bias=True,padding='valid',nonlin='relu'):
+    def __init__(self,inputs,outputs,kernel_dim,use_bias=True,padding='valid'):
 
         assert padding in {'valid', 'same'}
 
         self.w = random(size=(outputs,inputs,kernel_dim,kernel_dim))
         self.outs = outputs
         self.use_bias = use_bias 
-        self.nonlin = nonlin
         self.padding_style = padding
 
         self.kh = kernel_dim
@@ -142,27 +158,16 @@ class Conv2d(Module):
 
 
 
-        if self.use_bias:
-            out = out + self.b
-        
-        if self.nonlin == None:
-            return x
-        if self.nonlin == 'relu':
-            x = x.relu()
-        elif self.nonlin == 'sigmoid':
-            x = x.sigmoid()
-
-
         return x
 
         return out
 
 
 
+
 class Linear(Module):
-    def __init__(self,n_in,n_out,use_bias = True,nonlin='relu'):
+    def __init__(self,n_in,n_out,use_bias = True):
         self.use_bias = use_bias
-        self.nonlin = 'relu'
         self.w = random(size=(n_out,n_in,))
         self.b = random(size=(n_out,1))
     def parameters(self):
@@ -175,14 +180,6 @@ class Linear(Module):
         x = self.w @ x
         if self.use_bias:
             x = x + self.b
-        if self.nonlin == None:
-            return x
-        if self.nonlin == 'relu':
-            x = x.relu()
-        elif self.nonlin == 'sigmoid':
-            x = x.sigmoid()
-        elif self.nonlin == 'softmax':
-            x = x.softmax()
 
 
         return x
@@ -198,7 +195,10 @@ class MaxPool2d():
         self.dimensions = dimesions
         
     def __call__(self,x):
+
         x = x if isinstance(x,(Tensor)) else Tensor(x)
+
+        assert len(x.shape) == 4
 
 
 
@@ -208,7 +208,7 @@ class MaxPool2d():
         for row in range(image.shape[2]//self.dimensions[0]):
             for col in range(image.shape[3]//self.dimensions[1]):
                 print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]])
-                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].amax(axis=(2,3),keepdims=True))
+                print(image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].max(axis=(2,3),keepdims=True))
                 ismax[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] = (
 
                     image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]] == 
