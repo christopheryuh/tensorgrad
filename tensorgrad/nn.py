@@ -83,6 +83,9 @@ class Conv2d(Module):
         self.kh = kernel_dim
         self.kw = kernel_dim
 
+
+        self.has_vars = True
+
         self.h2 = self.kh//2
         self.w2 = self.kh//2
 
@@ -169,6 +172,7 @@ class Conv2d(Module):
 class Linear(Module):
     def __init__(self,n_in,n_out,use_bias = True):
         self.use_bias = use_bias
+        self.has_vars = True
         self.w = random(size=(n_out,n_in,))
         self.b = random(size=(n_out,1))
     def parameters(self):
@@ -192,45 +196,52 @@ class Flatten():
         return x.reshape((x.shape[0],-1))
 
 class MaxPool2d():
-    def __init__(self,dimesions):
-        self.dimensions = dimesions
+    def __init__(self,dimensions):
+        self.dimensions = dimensions
         
     def __call__(self,x):
-
         x = x if isinstance(x,(Tensor)) else Tensor(x)
 
-        assert len(x.shape) == 4
-
-
-
         image = x.data
-        out = np.empty((x.shape[0],x.shape[1],x.shape[2]//self.dimensions[0],x.shape[3]//self.dimensions[1]))
-        ismax = zeros(x.shape)
-        for row in range(image.shape[2]//self.dimensions[0]):
-            for col in range(image.shape[3]//self.dimensions[1]):
+        out = np.empty((x.shape[0], x.shape[1], x.shape[2] // self.dimensions[0], x.shape[3] // self.dimensions[1]))
+        ismax = np.zeros_like(image, dtype=np.bool)
 
-                max_indices = image[:,:,row:row+self.dimensions[0],col:col+self.dimensions[1]].reshape(image.shape[0],image.shape[0],-1).argmax()
-                print(max_indices)
-                maxval = image[max_indices]
-                ismax[max_indices] = True
+        for i, oi in zip(range(0, image.shape[2], self.dimensions[0]),
+                         range(0, out.shape[2], 1)):
+            for j, oj in zip(range(0, image.shape[3], self.dimensions[1]),
+                             range(0, out.shape[3], 1)):
+                print(i, j, oi, oj)
 
-                out[:,:,row,col] = maxval
+                # get the maximum in the window: shape = (N, C, 1, 1)
+                flat_window = image[:, :, i:i + self.dimensions[0], j:j + self.dimensions[1]].reshape(image.shape[0], image.shape[1], -1)  # N, C, dim[0] * dim[1]
+                index_array = np.argmax(flat_window, axis=-1)
+                indices = np.unravel_index(index_array, self.dimensions)
+                indices = np.array(indices).reshape(-1,)
+                print(flat_window)
+                print(indices)
+
+                # set the booleans for the window in ismax: shape = (N, C, dim[0], dim[1])
+                ismax[:,:,indices] = True
+                # ismax[:, :, i:i + self.dimensions[0], j:j + self.dimensions[0]] = (
+                #     image[:, :, i:i + self.dimensions[0], j:j + self.dimensions[1]] == maxval)
+
+                # set the single pixel in the output: shape = (N, C, 1, 1)
+                print('window with indexing',flat_window[:][:][indices[0]][indices[1]])
+                out[:, :, oi, oj] = flat_window[0][indices[0]][indices[1]]
 
 
+        # convert `out` to a Tensor
         out = Tensor(out)
 
-
-        
         def _backward():
-            print('ismax*x.datashape',(ismax  * x.data).shape)
-            x.grad += (ismax.astype(int)  * x.data)
-
+            # add the gradient from the output of the chosen pixel
+            print(x.grad.shape, ismax.shape, out.grad.shape)
+            print(x.grad[ismax])
+            print(ismax)
+            x.grad[ismax] += out.grad
 
         out._backward = _backward 
         return out
-
-
-
 
 
 class Model(Module):
@@ -245,7 +256,8 @@ class Model(Module):
         return x
     def parameters(self):
         for layer in self.layers:
-            self.parameters = [*self.parameters,layer]
+            if layer.has_vars == True:
+                self.parameters = [*self.parameters,layer.parameters()]
         return self.parameters
     def train(self,x,y,optimizer=None,lossFn=None,epochs=1):
         if optimizer == None:
@@ -269,18 +281,44 @@ class Model(Module):
             print(f"epoch:{epoch + 1}\tloss:{loss}")
 
 
-class BatchNorm():
+class BatchNorm(Module):
     def __init__(self):
         self.running_mean = 0
         self.running_var = 0
+        self.n = 0
+        self.has_vars = True
         self.w = random()
         self.b = random()
     def __call__(self,x,training=False):
-        if training:
-            if len(x.shape) == 4:
-                mean = x.sum(axis=(0,2,3))/(x.shape[0]*x.shape[2]*x.shape[3])
-                var = (x - mean)**2
+        self.n += 1
+        if len(x.shape) == 4:
+
+            mean = x.sum(axis=(0,2,3))/(x.shape[0]*x.shape[2]*x.shape[3])
+            var = (x - mean)**2
+
+            self.running_mean = (1/self.n)*mean + ((self.n-1)/self.n)*self.running_mean
+            self.running_var = (1/self.n) * var + (self.n-1/self.n)*self.running_var
+            if training:
 
                 x = (x - mean)/var
                 x = self.w*x + self.b
+            else:
+                x = (x - self.running_mean)/self.running_var
+        if len(x.shape) == 2:
+
+            mean = x.sum(axis=(0,1))/(x.shape[0]*x.shape[1])
+            var = (x - mean)**2
+
+            self.running_mean = (1/self.n)*mean + ((self.n-1)/self.n)*self.running_mean
+            self.running_var = (1/self.n) * var + (self.n-1/self.n)*self.running_var
+
+            if training:
+
+                x = (x-mean)/var
+                x = self.w*x + self.b
+            else:
+                x = (x - self.running_mean)/self.running_var
+    def parameters(self):
+        return [w,b]
+
                 

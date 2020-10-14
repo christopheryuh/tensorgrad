@@ -4,7 +4,6 @@ from tensorgrad.engine import random
 from tensorgrad.engine import Tensor
 from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d,Flatten,Relu,Softmax
 
-#TODO: make this a real testing script
 
 def helper(fn,fn_input):
     xpt = torch.Tensor(fn_input)
@@ -134,7 +133,10 @@ def make_max_pooling():
     x = Tensor(np.array([[[1,2,3,4],
                  [1,2,3,4],
                  [1,2,3,4],
-                 [1,2,3,4]]]).reshape(1,1,4,4))
+                 [1,2,3,4]],[[1,2,3,4],
+                 [1,2,3,4],
+                 [1,2,3,4],
+                 [1,2,3,4]]]).reshape(1,2,4,4))
 
     y = maxp(x)
 
@@ -170,7 +172,7 @@ def make_a_convnet():
     convnet.add(Conv2d(32,32,3))
     convnet.add(Relu())
     convnet.add(Flatten())
-    convnet.add(Linear(32*4*4,10,nonlin='softmax'))
+    convnet.add(Linear(32*4*4,10))
     convnet.add(Softmax())
 
     convent.train(train_images,train_labels)
