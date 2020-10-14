@@ -1,6 +1,7 @@
 import numpy as np 
 
 from tensorgrad.engine import random,empty,zeros,Tensor
+from tensorgrad import utils
 
 
 def oneHot(x,depth=None):
@@ -194,51 +195,43 @@ class Flatten():
     def __call__(self,x):
 
         return x.reshape((x.shape[0],-1))
+    
 
 class MaxPool2d():
-    def __init__(self,dimensions):
+    def __init__(self, dimensions):
         self.dimensions = dimensions
         
-    def __call__(self,x):
-        x = x if isinstance(x,(Tensor)) else Tensor(x)
+    def __call__(self, x):
+        """Based on https://wiseodd.github.io/techblog/2016/07/18/convnet-maxpool-layer/"""
+        x = x if isinstance(x, (Tensor)) else Tensor(x)
 
+        n, c, h, w = x.shape
+        dh, dw = self.dimensions
+        stride = dh
+        h_out = h // dh         # TODO: modify for different stride?
+        w_out = w // dw
         image = x.data
-        out = np.empty((x.shape[0], x.shape[1], x.shape[2] // self.dimensions[0], x.shape[3] // self.dimensions[1]))
-        ismax = np.zeros_like(image, dtype=np.bool)
+        
+        assert dw == dh, 'not implemented: unequal maxpool strides'
 
-        for i, oi in zip(range(0, image.shape[2], self.dimensions[0]),
-                         range(0, out.shape[2], 1)):
-            for j, oj in zip(range(0, image.shape[3], self.dimensions[1]),
-                             range(0, out.shape[3], 1)):
-                print(i, j, oi, oj)
+        # im2col is a more elegant way of doing what I was attempting below.
+        x_cols = utils.im2col(image.reshape(n * c, 1, h, w), dh, dw, padding=0, stride=stride)
 
-                # get the maximum in the window: shape = (N, C, 1, 1)
-                flat_window = image[:, :, i:i + self.dimensions[0], j:j + self.dimensions[1]].reshape(image.shape[0], image.shape[1], -1)  # N, C, dim[0] * dim[1]
-                index_array = np.argmax(flat_window, axis=-1)
-                indices = np.unravel_index(index_array, self.dimensions)
-                indices = np.array(indices).reshape(-1,)
-                print(flat_window)
-                print(indices)
+        max_indices = np.argmax(x_cols, axis=1)
 
-                # set the booleans for the window in ismax: shape = (N, C, dim[0], dim[1])
-                ismax[:,:,indices] = True
-                # ismax[:, :, i:i + self.dimensions[0], j:j + self.dimensions[0]] = (
-                #     image[:, :, i:i + self.dimensions[0], j:j + self.dimensions[1]] == maxval)
-
-                # set the single pixel in the output: shape = (N, C, 1, 1)
-                print('window with indexing',flat_window[:][:][indices[0]][indices[1]])
-                out[:, :, oi, oj] = flat_window[0][indices[0]][indices[1]]
-
+        out = x_cols[max_indices, range(max_indices.size)]
+        out = out.reshape(h_out, w_out, n, c)
+        out = out.transpose(2, 3, 0, 1)
 
         # convert `out` to a Tensor
         out = Tensor(out)
 
         def _backward():
-            # add the gradient from the output of the chosen pixel
-            print(x.grad.shape, ismax.shape, out.grad.shape)
-            print(x.grad[ismax])
-            print(ismax)
-            x.grad[ismax] += out.grad
+            dx_cols = np.zeros_like(x_cols)
+            dout_flat = out.grad.transpose(2, 3, 0, 1).ravel()
+            dx_cols[max_indices, range(max_indices.size)] = dout_flat
+            dx = utils.col2im(dx_cols, (n * c, 1, h, w), dh, dw, padding=0, stride=stride)
+            x.grad += dx.reshape(x.shape)
 
         out._backward = _backward 
         return out
