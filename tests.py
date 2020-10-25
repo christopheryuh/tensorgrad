@@ -1,8 +1,11 @@
 import torch
 import numpy as np
-from tensorgrad.engine import random
-from tensorgrad.engine import Tensor
-from tensorgrad.nn import Linear,Conv2d,Model, MaxPool2d,Flatten,Relu,Softmax
+from tensorgrad.engine import *
+from tensorgrad.func import *
+from tensorgrad.nn import *
+from tensorgrad.models import Model
+from tensorgrad.optimizers import SGD
+
 
 
 def helper(fn,fn_input):
@@ -59,7 +62,7 @@ def test_broadcast_add():
 def test_matmul():
     fn_input = np.array([[1.,2.,3.,3.],[1.,2.,3.,3.]])
     def fn(x,pytorch=False):
-        if pytorch:
+        if pytorch == True:
             z = x @ torch.tensor([[1],[2],[3],[3]],dtype=torch.float32)
             return z.sum()
         else:
@@ -126,17 +129,14 @@ def make_a_conv2d_layer():
     print(z)
     print(layer.w.grad)
 
-make_a_conv2d_layer()
+#make_a_conv2d_layer()
 print('--maxpool--')
 def make_max_pooling():
     maxp = MaxPool2d((2,2))
     x = Tensor(np.array([[[1,2,3,4],
                  [1,2,3,4],
                  [1,2,3,4],
-                 [1,2,3,4]],[[1,2,3,4],
-                 [1,2,3,4],
-                 [1,2,3,4],
-                 [1,2,3,4]]]).reshape(1,2,4,4))
+                 [1,2,3,4]]]).reshape(1,1,4,4))
 
     y = maxp(x)
 
@@ -150,29 +150,29 @@ make_max_pooling()
 print("-------Testing Conv-Net----------")
 
 def make_a_convnet():
-    from tensorflow.keras.datasets import mnist
 
-    (train_images,train_labels),(_,_) = mnist.load_data()
+    #from tensorflow.keras.datasets import mnist
 
-    train_images = train_images.reshape(-1,1,28,28)
+    (train_images, train_labels)= (np.arange(200),np.arange(2))
 
-    image = train_images[0].reshape(1,1,28,28)
+    train_images = train_images.reshape(-1,1,10,10)
 
-    convnet = Model()
+    print('got data')
+
+
+    convnet = Model([])
     convnet.add(Conv2d(1,8,3))
     convnet.add(Relu())
     convnet.add(MaxPool2d((2,2)))
-    convnet.add(Relu())
-    convnet.add(Conv2d(8,16,3))
-    convnet.add(Relu())
-    convnet.add(Conv2d(16,32,3))
-    convnet.add(Relu())
-    convnet.add(MaxPool2d((2,2)))
-    convnet.add(Relu())
-    convnet.add(Conv2d(32,32,3))
     convnet.add(Relu())
     convnet.add(Flatten())
     convnet.add(Linear(32*4*4,10))
     convnet.add(Softmax())
 
-    convent.train(train_images,train_labels)
+    print(len(convnet.parameters()))
+
+    print(train_images.shape)
+    
+    convnet.train(train_images,train_labels,loss_fn=Crossentropy,optimizer=SGD(convnet.parameters(),.001))
+
+make_a_convnet()

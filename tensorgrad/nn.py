@@ -1,29 +1,25 @@
 import numpy as np 
 
-from tensorgrad.engine import random,empty,zeros,Tensor
+from tensorgrad.engine import *
 from tensorgrad import utils
+from tensorgrad.optimizers import *
+from tensorgrad.func import *
 
 
-def oneHot(x,depth=None):
-    assert (depth != None)
-    zeros = np.zeros(x.shape[0],depth)
-    for idx,i in enumerate(x):
-        zeros[idx][i] = 1
-    return zeros
+class Activation():
+    def __init__(self):
+        self.has_vars = False
 
-
-
-
-class Relu():
-    def __call__(self,x):
+class Relu(Activation):
+    def __call__(self,x,training=False):
         return x.relu()
 
-class Sigmoid():
-    def __call__(self,x):
+class Sigmoid(Activation):
+    def __call__(self,x,training=False):
         return x.sigmoid()
 
-class Softmax():
-    def __call__(self,x):
+class Softmax(Activation):
+    def __call__(self,x,training=False):
         return x.softmax()
         
     
@@ -45,33 +41,13 @@ class Crossentropy():
         out._backward = _backward
         
         return out
-        
-
-
-class Optimizer():
-    def __init__(self,parameters,lr=.001):
-        self.lr = lr
-        self.parameters = parameters
-
-
-class SGD(Optimizer):
-    def step(self):
-        for param in self.parameters:
-            param.data = param.data - (param.grad * self.lr)
-            
 
 
 
 
 
-class Module():
-    def zero_grad(self):
-        for p in self.parameters():
-            p.grad[:] = 0.
 
-
-
-class Conv2d(Module):
+class Conv2d():
     def __init__(self,inputs,outputs,kernel_dim,use_bias=True,padding='valid'):
 
         assert padding in {'valid', 'same'}
@@ -138,10 +114,6 @@ class Conv2d(Module):
 
     def __call__(self,x,training=False):
 
-
-        assert len(x.shape) == 4
-        print(x.shape)
-
         x = x if isinstance(x,(Tensor)) else Tensor(x)
         
         image_shape = (x.shape[-2],x.shape[-1])
@@ -170,7 +142,7 @@ class Conv2d(Module):
 
 
 
-class Linear(Module):
+class Linear():
     def __init__(self,n_in,n_out,use_bias = True):
         self.use_bias = use_bias
         self.has_vars = True
@@ -192,17 +164,21 @@ class Linear(Module):
 
 
 class Flatten():
-    def __call__(self,x):
+    def __init__(self):
+        self.has_vars = False
+    def __call__(self,x,training=False):
 
         return x.reshape((x.shape[0],-1))
     
 
 class MaxPool2d():
     def __init__(self, dimensions):
+        self.has_vars = False
         self.dimensions = dimensions
         
-    def __call__(self, x):
+    def __call__(self, x,training=False):
         """Based on https://wiseodd.github.io/techblog/2016/07/18/convnet-maxpool-layer/"""
+        print("maxpool x shape", x.shape)
         x = x if isinstance(x, (Tensor)) else Tensor(x)
 
         n, c, h, w = x.shape
@@ -218,14 +194,14 @@ class MaxPool2d():
         x_cols = utils.im2col(image.reshape(n * c, 1, h, w), dh, dw, padding=0, stride=stride)
 
         max_indices = np.argmax(x_cols, axis=1)
-
+        print("max",max_indices)
         out = x_cols[max_indices, range(max_indices.size)]
-        out = out.reshape(h_out, w_out, n, c)
+        out = out.reshape(n,c,h_out, w_out)
         out = out.transpose(2, 3, 0, 1)
 
         # convert `out` to a Tensor
         out = Tensor(out)
-
+=
         def _backward():
             dx_cols = np.zeros_like(x_cols)
             dout_flat = out.grad.transpose(2, 3, 0, 1).ravel()
@@ -237,44 +213,9 @@ class MaxPool2d():
         return out
 
 
-class Model(Module):
-    def __init__(self,layers):
-        self.layers = layers
-        self.parameters = self.layers
-    def add(self,layer):
-        self.layers = [*self.layers,layers]
-    def __call__(self,x,training=False):
-        for layer in self.layers:
-            x = layer(x,training=True)
-        return x
-    def parameters(self):
-        for layer in self.layers:
-            if layer.has_vars == True:
-                self.parameters = [*self.parameters,layer.parameters()]
-        return self.parameters
-    def train(self,x,y,optimizer=None,lossFn=None,epochs=1):
-        if optimizer == None:
-            opt = SGD(self.parameters)
-        else:
-            opt = optimizer
-        if lossFn == None:
-            lossFn = Crossentropy()
-
-        for epoch in range(epoch):
-            for batch in zip(x,y):
-                data, labels = batch
-                
-                y_hat = self(data,training=True)
-
-                loss = lossFn(y_hat,y)
-                
-                loss.backward()
-
-                optimizer.step()
-            print(f"epoch:{epoch + 1}\tloss:{loss}")
 
 
-class BatchNorm(Module):
+class BatchNorm():
     def __init__(self):
         self.running_mean = 0
         self.running_var = 0
@@ -312,6 +253,6 @@ class BatchNorm(Module):
             else:
                 x = (x - self.running_mean)/self.running_var
     def parameters(self):
-        return [w,b]
+        return [self.w,self.b]
 
                 

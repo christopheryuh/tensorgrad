@@ -1,14 +1,6 @@
 import numpy as np
 from tensorgrad import func
 
-def random(*args,**kwargs):
-    return Tensor(np.random.normal(*args,**kwargs))
-
-def empty(*args,**kwargs):
-    return Tensor(np.empty(*args,**kwargs))
-
-def zeros(*args, **kwargs):
-    return Tensor(np.zeros(*args,**kwargs))
 
 class Tensor():
     def __init__(self,data,_children=(),op=''):

@@ -1,6 +1,19 @@
 from tensorgrad import engine
 import numpy as np
 
+def random(*args,**kwargs):
+    return engine.Tensor(np.random.normal(*args,**kwargs))
+
+def empty(*args,**kwargs):
+    return engine.Tensor(np.empty(*args,**kwargs))
+
+def zeros(*args, **kwargs):
+    return engine.Tensor(np.zeros(*args,**kwargs))
+
+
+
+
+
 def concat(tensors,axis=0):
     """Concatenate the tensors along the given axis"""
     tensors = [t if isinstance(t, engine.Tensor) else engine.Tensor(t) for t in tensors]
@@ -14,3 +27,12 @@ def concat(tensors,axis=0):
             st += t.shape[axis]
     out._backward = _backward
     return  out
+
+
+
+def oneHot(x,depth=None):
+    assert (depth != None)
+    zeros = np.zeros(x.shape[0],depth)
+    for idx,i in enumerate(x):
+        zeros[idx][i] = 1
+    return zeros
