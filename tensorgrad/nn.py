@@ -178,7 +178,6 @@ class MaxPool2d():
         
     def __call__(self, x,training=False):
         """Based on https://wiseodd.github.io/techblog/2016/07/18/convnet-maxpool-layer/"""
-        print("maxpool x shape", x.shape)
         x = x if isinstance(x, (Tensor)) else Tensor(x)
 
         n, c, h, w = x.shape
@@ -195,17 +194,17 @@ class MaxPool2d():
 
         max_indices = np.argmax(x_cols, axis=1)
         print("max",max_indices)
-        out = x_cols[max_indices, range(max_indices.size)]
+        out = x_cols[range(max_indices.size),max_indices]
+        print(out)
         out = out.reshape(n,c,h_out, w_out)
         out = out.transpose(2, 3, 0, 1)
 
         # convert `out` to a Tensor
         out = Tensor(out)
-=
         def _backward():
             dx_cols = np.zeros_like(x_cols)
             dout_flat = out.grad.transpose(2, 3, 0, 1).ravel()
-            dx_cols[max_indices, range(max_indices.size)] = dout_flat
+            dx_cols[range(max_indices.size),max_indices] = dout_flat
             dx = utils.col2im(dx_cols, (n * c, 1, h, w), dh, dw, padding=0, stride=stride)
             x.grad += dx.reshape(x.shape)
 
