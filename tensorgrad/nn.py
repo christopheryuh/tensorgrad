@@ -32,14 +32,15 @@ class Crossentropy():
     def __call__(self,y_hat,y):
         labels = oneHot(y,depth=y_hat.shape[-1])
         
-        out = Tensor(-1*y_hat*np.log(labels))
+
+
+        out = Tensor(-1*y_hat.data*np.log(labels))
         out = out.sum()
 
         def _backward():
             y_hat.grad += -1*labels**-1
 
         out._backward = _backward
-        
         return out
 
 
@@ -134,7 +135,6 @@ class Conv2d():
 
 
 
-
         return x
 
         return out
@@ -146,8 +146,8 @@ class Linear():
     def __init__(self,n_in,n_out,use_bias = True):
         self.use_bias = use_bias
         self.has_vars = True
-        self.w = random(size=(n_out,n_in,))
-        self.b = random(size=(n_out,1))
+        self.w = random(size=(n_in,n_out))
+        self.b = random(size=(1,n_out))
     def parameters(self):
         if self.use_bias:
             return [self.w,self.b]
@@ -155,10 +155,10 @@ class Linear():
             return [self.w,]
     def __call__(self,x,training=False):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
-        x = self.w @ x
+    
+        x = x @ self.w
         if self.use_bias:
             x = x + self.b
-
 
         return x
 
@@ -177,7 +177,6 @@ class MaxPool2d():
         self.dimensions = dimensions
         
     def __call__(self, x,training=False):
-        """Based on https://wiseodd.github.io/techblog/2016/07/18/convnet-maxpool-layer/"""
         x = x if isinstance(x, (Tensor)) else Tensor(x)
 
         n, c, h, w = x.shape
@@ -189,24 +188,27 @@ class MaxPool2d():
         
         assert dw == dh, 'not implemented: unequal maxpool strides'
 
-        # im2col is a more elegant way of doing what I was attempting below.
-        x_cols = utils.im2col(image.reshape(n * c, 1, h, w), dh, dw, padding=0, stride=stride)
-
-        max_indices = np.argmax(x_cols, axis=1)
-        print("max",max_indices)
-        out = x_cols[range(max_indices.size),max_indices]
-        print(out)
-        out = out.reshape(n,c,h_out, w_out)
-        out = out.transpose(2, 3, 0, 1)
+        pooled = np.empty((n,c,w//stride,h//stride))
+        
+        ismax = np.zeros(x.shape)
+        for nidx in range(n):
+            for chan in range(c):
+                for i in range(h_out):
+                    for j in range(w_out):
+                        patch = image[nidx,chan,stride*j:stride*j+stride, stride*i:stride*i+stride]
+                        max = np.argmax(patch,axis=1)
+                        pooled[nidx,chan,i,j] = patch[max[0],max[1]]
+                        ismax[nidx,chan,stride*i+max[0],stride*j+max[1]] = 1.
+                        
+                
 
         # convert `out` to a Tensor
-        out = Tensor(out)
+        out = Tensor(pooled)
+
+
+
         def _backward():
-            dx_cols = np.zeros_like(x_cols)
-            dout_flat = out.grad.transpose(2, 3, 0, 1).ravel()
-            dx_cols[range(max_indices.size),max_indices] = dout_flat
-            dx = utils.col2im(dx_cols, (n * c, 1, h, w), dh, dw, padding=0, stride=stride)
-            x.grad += dx.reshape(x.shape)
+            x.grad += x.data * ismax
 
         out._backward = _backward 
         return out

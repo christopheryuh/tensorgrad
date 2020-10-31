@@ -31,8 +31,11 @@ def concat(tensors,axis=0):
 
 
 def oneHot(x,depth=None):
+    x = np.array(x)
+
     assert (depth != None)
-    zeros = np.zeros(x.shape[0],depth)
-    for idx,i in enumerate(x):
-        zeros[idx][i] = 1
-    return zeros
+    zeros = np.zeros((x.shape[0],depth))
+    for val in x:
+        for idx,i in enumerate(val):
+            zeros[idx][int(i)] = 1
+        return zeros

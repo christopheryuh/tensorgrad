@@ -153,7 +153,7 @@ def make_a_convnet():
 
     #from tensorflow.keras.datasets import mnist
 
-    (train_images, train_labels)= (np.arange(200),np.arange(2))
+    (train_images, train_labels)= (np.arange(200),np.arange(2).reshape(1,2))
 
     train_images = train_images.reshape(-1,1,10,10)
 
@@ -166,13 +166,13 @@ def make_a_convnet():
     convnet.add(MaxPool2d((2,2)))
     convnet.add(Relu())
     convnet.add(Flatten())
-    convnet.add(Linear(32*4*4,10))
+    convnet.add(Linear(1*5*5,10))
     convnet.add(Softmax())
 
     print(len(convnet.parameters()))
 
     print(train_images.shape)
     
-    convnet.train(train_images,train_labels,loss_fn=Crossentropy,optimizer=SGD(convnet.parameters(),.001))
+    convnet.train(train_images,train_labels,loss_fn=Crossentropy,label_depth=2,optimizer=SGD(convnet.parameters(),1),epochs=10)
 
 make_a_convnet()

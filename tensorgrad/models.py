@@ -15,7 +15,6 @@ class Model():
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
         for layer in self.layers:
-            print('x layers shape',x.shape)
             x = layer(x,training=True)
         return x
     def parameters(self):
@@ -27,23 +26,27 @@ class Model():
         
     def train(self,data,labels,optimizer=None,loss_fn=None,epochs=1,label_depth=None,update_after_epoch=True):
         assert loss_fn != None
+        loss_fn = loss_fn()
         if optimizer == None:
             print("Warning: There is no optimizer set, default SGD is being used.")
-            optimizer = SGD(self.parameters)
+            optimizer = SGD(self.parameters,lr=.001)
         if label_depth == None:
             print("Warning: Label depth set to 'None'. Please specify a label depth unless labels already one hot encoded.")
         for epoch in range(epochs):
             for x,y in zip(data,labels):
                 x = x.reshape(-1,*x.shape)
+                y = y.reshape(-1,1)
                 if label_depth != None:
                     y = oneHot(y,depth=label_depth)
                 y_hat = self(x)
+
 
                 loss = loss_fn(y_hat,y)
 
                 optimizer.zero_grad()
 
                 optimizer.step()
+
             if update_after_epoch:
                 print(f"loss:{loss}")
                 

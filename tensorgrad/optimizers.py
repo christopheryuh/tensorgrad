@@ -11,7 +11,7 @@ class Optimizer():
     
     def zero_grad(self):
         for param in self.parameters:
-            param.grad[:] = 0.0
+            param.grad = np.zeros_like(param.grad)
     
     def step(self):
         """Update the weights based on the update rule for this optimizer"""
@@ -30,5 +30,5 @@ class Optimizer():
 class SGD(Optimizer):
     def step(self):
         super(SGD, self).step()
-        for param in self.parameters():
-            param.data -= self.lr*self._running_mean 
+        for i,param in enumerate(self.parameters):
+            param.data = self.lr * (param.data - self._running_mean[i])

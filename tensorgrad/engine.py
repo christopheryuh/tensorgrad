@@ -1,6 +1,6 @@
 import numpy as np
 from tensorgrad import func
-
+from tensorgrad.func import *
 
 class Tensor():
     def __init__(self,data,_children=(),op=''):
@@ -42,7 +42,7 @@ class Tensor():
 
 
     def reshape(self,shape):
-            out = self.data.reshape(shape)
+            out = Tensor(self.data.reshape(shape))
 
             def _backward():
                 self.grad = self.grad.reshape(self.data.shape)*out.grad         
@@ -187,6 +187,7 @@ class Tensor():
     
     def __matmul__(self,other):
         other = other if isinstance(other, Tensor) else Tensor(other)
+    
 
         out = Tensor(np.matmul(self.data,other.data),_children=(self,other),op='matmul')
 
