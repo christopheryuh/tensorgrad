@@ -40,7 +40,6 @@ class Model():
                     y = oneHot(y,depth=label_depth)
                 y_hat = self(x)
 
-
                 loss = loss_fn(y_hat,y)
 
                 optimizer.zero_grad()
