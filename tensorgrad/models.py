@@ -2,7 +2,7 @@ from tensorgrad.engine import *
 from tensorgrad.func import *
 from tensorgrad.utils import *
 from tensorgrad.nn import *
-
+from matplotlib import pyplot as plt
 
 
 
@@ -32,6 +32,7 @@ class Model():
             optimizer = SGD(self.parameters,lr=.001)
         if label_depth == None:
             print("Warning: Label depth set to 'None'. Please specify a label depth unless labels already one hot encoded.")
+        losslist = []
         for epoch in range(epochs):
             for x,y in zip(data,labels):
                 x = x.reshape(-1,*x.shape)
@@ -46,7 +47,13 @@ class Model():
 
                 optimizer.step()
 
+                losslist.append(loss.data)
+
             if update_after_epoch:
-                print(f"loss:{loss}")
+                print(f"loss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+        plt.plot(range(len(losslist)),losslist)
+        plt.show()
+
+        
                 
                 

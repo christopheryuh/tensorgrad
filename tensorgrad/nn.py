@@ -34,7 +34,7 @@ class Crossentropy():
         
 
 
-        out = Tensor(-1*y_hat.data*np.log(labels))
+        out = Tensor(-1*y_hat.data*np.log(labels+.0000000001))
         out = out.sum()
 
         def _backward():

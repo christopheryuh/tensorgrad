@@ -166,7 +166,7 @@ def make_a_convnet():
     convnet.add(MaxPool2d((2,2)))
     convnet.add(Relu())
     convnet.add(Flatten())
-    convnet.add(Linear(1*5*5,10))
+    convnet.add(Linear(1*5*5,2))
     convnet.add(Softmax())
 
     print(len(convnet.parameters()))
