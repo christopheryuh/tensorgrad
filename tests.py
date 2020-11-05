@@ -151,28 +151,33 @@ print("-------Testing Conv-Net----------")
 
 def make_a_convnet():
 
-    #from tensorflow.keras.datasets import mnist
+    from tensorflow.keras.datasets import mnist
 
-    (train_images, train_labels)= (np.arange(200),np.arange(2).reshape(1,2))
+    (train_images, train_labels),(test_images, test_labels)= mnist.load_data()
 
-    train_images = train_images.reshape(-1,1,10,10)
-
+    train_images = train_images.reshape(-1,1,28,28)
+    
     print('got data')
+    print(train_labels.shape)
 
 
     convnet = Model([])
-    convnet.add(Conv2d(1,8,3))
+    convnet.add(Conv2d(1,8,3,padding='same'))
     convnet.add(Relu())
     convnet.add(MaxPool2d((2,2)))
+    convnet.add(Conv2d(8,16,3,padding='same'))
+    convnet.add(Relu())
+    convnet.add(MaxPool2d((2,2)))
+    convnet.add(Conv2d(16,32,3,padding='same'))
     convnet.add(Relu())
     convnet.add(Flatten())
-    convnet.add(Linear(1*5*5,2))
+    convnet.add(Linear(32*7*7,10))
     convnet.add(Softmax())
 
     print(len(convnet.parameters()))
 
-    print(train_images.shape)
+    print(train_labels.shape)
     
-    convnet.train(train_images,train_labels,loss_fn=Crossentropy,label_depth=2,optimizer=SGD(convnet.parameters(),1),epochs=10)
+    convnet.train(train_images,train_labels,loss_fn=Crossentropy,label_depth=10,optimizer=SGD(convnet.parameters(),.001),epochs=5)
 
 make_a_convnet()

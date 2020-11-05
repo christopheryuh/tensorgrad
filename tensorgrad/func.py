@@ -35,7 +35,8 @@ def oneHot(x,depth=None):
 
     assert (depth != None)
     zeros = np.zeros((x.shape[0],depth))
-    for val in x:
-        for idx,i in enumerate(val):
-            zeros[idx][int(i)] = 1
-        return zeros
+    x = x.reshape((-1,))
+    for idx,val in enumerate(x):
+        print(val)
+        zeros[idx][val] = 1
+    return zeros

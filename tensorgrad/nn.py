@@ -6,6 +6,8 @@ from tensorgrad.optimizers import *
 from tensorgrad.func import *
 
 
+epsilon = .00000000000001
+
 class Activation():
     def __init__(self):
         self.has_vars = False
@@ -30,15 +32,12 @@ class Softmax(Activation):
 
 class Crossentropy():
     def __call__(self,y_hat,y):
-        labels = oneHot(y,depth=y_hat.shape[-1])
-        
-
-
-        out = Tensor(-1*y_hat.data*np.log(labels+.0000000001))
+        labels = y
+        out = Tensor(-1*labels*np.log(y_hat.data+epsilon))
         out = out.sum()
 
         def _backward():
-            y_hat.grad += -1*labels**-1
+            y_hat.grad += -1*labels*(y_hat.data+epsilon)
 
         out._backward = _backward
         return out
@@ -135,7 +134,7 @@ class Conv2d():
 
 
 
-        return x
+        out = out.reshape((x.shape[0],self.outs,*image_shape))
 
         return out
 
@@ -155,7 +154,6 @@ class Linear():
             return [self.w,]
     def __call__(self,x,training=False):
         x = x if isinstance(x,(Tensor)) else Tensor(x)
-    
         x = x @ self.w
         if self.use_bias:
             x = x + self.b
@@ -204,7 +202,6 @@ class MaxPool2d():
 
         # convert `out` to a Tensor
         out = Tensor(pooled)
-
 
 
         def _backward():

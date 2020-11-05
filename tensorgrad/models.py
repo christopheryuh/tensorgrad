@@ -33,26 +33,46 @@ class Model():
         if label_depth == None:
             print("Warning: Label depth set to 'None'. Please specify a label depth unless labels already one hot encoded.")
         losslist = []
+        
+        print(labels.shape)
+
+        if label_depth != None:
+            labels = oneHot(labels.reshape(-1,1),depth=label_depth)
+
         for epoch in range(epochs):
+            avg = []
             for x,y in zip(data,labels):
                 x = x.reshape(-1,*x.shape)
-                y = y.reshape(-1,1)
-                if label_depth != None:
-                    y = oneHot(y,depth=label_depth)
+
+                
                 y_hat = self(x)
 
                 loss = loss_fn(y_hat,y)
 
                 optimizer.zero_grad()
 
+
+                loss.backward()
+
+
                 optimizer.step()
 
-                losslist.append(loss.data)
+                avg.append(loss)
 
             if update_after_epoch:
-                print(f"loss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
-        plt.plot(range(len(losslist)),losslist)
+                losslist.append(sum(avg[-y.shape[0]:])/y.shape[0])
+                print('losslist',losslist)
+                print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+        if update_after_epoch:
+            plt.plot(range(len(losslist)),losslist)
+            plt.show()
+
+        data = np.array(data)
+        
+        pred = self(data[0])
+        plt.imshow(data[0].reshape((28,28)))
         plt.show()
+        print(np.argmax(pred.data))
 
         
                 

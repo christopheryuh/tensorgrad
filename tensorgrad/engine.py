@@ -96,15 +96,15 @@ class Tensor():
 
         return out
 
-    def softmax(self,axis=-1):
-        out = empty(self.data.shape)
-        for i,vector in enumerate(self.data):
-            out[i] = 1/np.sum(np.exp(vector),axis=axis)*np.exp(vector)
+    def softmax(self, axis=-1):
+        data = self.data-np.max(self.data)
+        num = np.exp(data)
+        den = np.sum(num,axis=axis,keepdims=True)
+        out = Tensor(num/den)
 
         def _backward():
-            for i, vector in enumerate(self.data):
-                self.grad[i] += (out.data - 1/np.exp(vector).sum()) * out.grad
-
+            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=axis,keepdims=True)
+            
 
         out._backward = _backward
         return out
