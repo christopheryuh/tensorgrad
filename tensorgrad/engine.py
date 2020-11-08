@@ -1,9 +1,11 @@
 import numpy as np
+
 from tensorgrad import func
 from tensorgrad.func import *
 
+
 class Tensor():
-    def __init__(self,data,_children=(),op=''):
+    def __init__(self, data, _children=(), op=''):
         self.data = np.array(data)
         self.shape = self.data.shape
         self.grad = np.zeros_like(self.data).astype(np.float64)
@@ -11,7 +13,6 @@ class Tensor():
         self._prev = set(_children)
         self.op = op 
 
-         
     def backward(self):
         """Perform backpropagation on this Tensor.
 
@@ -25,6 +26,7 @@ class Tensor():
         # topological order all of the children in the graph
         topo = []
         visited = set()
+
         def build_topo(t):
             if t not in visited:
                 visited.add(t)
@@ -33,85 +35,77 @@ class Tensor():
                 topo.append(t)
         build_topo(self)
 
-
-
         # go one variable at a time and apply the chain rule to get its gradient
         self.grad = 1
         for t in reversed(topo):
             t._backward()
 
+    def reshape(self, shape):
+        out = Tensor(self.data.reshape(shape))
 
-    def reshape(self,shape):
-            out = Tensor(self.data.reshape(shape))
+        def _backward():
+            self.grad = self.grad.reshape(self.data.shape) * out.grad         
+        out._backward = _backward
 
-            def _backward():
-                self.grad = self.grad.reshape(self.data.shape)*out.grad         
-            out._backward = _backward
+        return out
 
-            return out
-    
-    def broadcast(self,other):
+    def broadcast(self, other):
 
         out = self
 
-        other = other if isinstance(other,(Tensor)) else Tensor(other)
+        other = other if isinstance(other, (Tensor)) else Tensor(other)
 
         for ax in range(len(self.data.shape)):
             xd = self.data.shape[ax]
             yd = other.data.shape[ax]
             if xd == yd:
                 pass
-            
+
             if yd == 1 and xd > 1:
                 pass
 
             elif xd == 1 and yd > 1:
-                out.data = func.concat([self.data for _ in range(yd)],axis=ax)
+                out.data = func.concat([self.data for _ in range(yd)], axis=ax)
 
             else:
                 raise ValueError(f'Mismatched Shape, {self} and {other}')
-        
 
         return out
-        
-        
-
 
     def relu(self):
-        out = Tensor(np.where(self.data>0,self.data,0))
+        out = Tensor(np.where(self.data > 0, self.data, 0))
 
         def _backward():
-            self.grad += np.where(self.data<0,self.grad,self.data) * out.grad
-        
+            self.grad += np.where(self.data < 0, self.grad, self.data) * out.grad
+
         out._backward = _backward
 
         return out
 
     def sigmoid(self):
-        out = Tensor(1/(1+np.exp(self.data)))
+        out = Tensor(1 / (1 + np.exp(self.data)))
 
         def _backward():
-            self.grad += ((1-out.data)*out.data) * out.grad
+            self.grad += ((1 - out.data) * out.data) * out.grad
         out._backward = _backward
 
         return out
 
     def softmax(self, axis=-1):
-        data = self.data-np.max(self.data)
+        data = self.data - np.max(self.data)
         num = np.exp(data)
-        den = np.sum(num,axis=axis,keepdims=True)
-        out = Tensor(num/den)
+        den = np.sum(num, axis=axis, keepdims=True)
+        out = Tensor(num / den)
 
         def _backward():
-            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=axis,keepdims=True)
-            
+            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)), axis=axis, keepdims=True)
 
         out._backward = _backward
         return out
 
-    def sum(self,axis=None):
-        out = Tensor(self.data.sum(axis),_children=(self,),op='sum')
-        
+    def sum(self, axis=None):
+        out = Tensor(self.data.sum(axis), _children=(self,), op='sum')
+
         def _backward():
             if axis == None:
                 self.grad += out.grad
@@ -120,7 +114,8 @@ class Tensor():
 
         out._backward = _backward
         return out
-    def __add__(self,other):
+
+    def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
@@ -129,8 +124,7 @@ class Tensor():
         else:
             self = self.broadcast(other)
             other = other.broadcast(self)
-        out = Tensor(self.data + other.data,_children=(self,other),op='+')
-        
+        out = Tensor(self.data + other.data, _children=(self, other), op='+')
 
         def _backward():
 
@@ -138,11 +132,10 @@ class Tensor():
             other.grad += out.grad
 
         out._backward = _backward
-        
+
         return out
 
-    
-    def __mul__(self,other):
+    def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
@@ -152,56 +145,52 @@ class Tensor():
             self = self.broadcast(other)
             other = other.broadcast(self)
 
-        out = Tensor(self.data*other.data,_children=(self,other),op='+')
-        
-        
+        out = Tensor(self.data * other.data, _children=(self, other), op='+')
 
         def _backward():
             self.grad = np.zeros(self.data.shape)
             other.grad = np.zeros(other.data.shape)
-            self.grad += other.data*out.grad
-            other.grad = other.grad + (self.data*out.grad)
+            self.grad += other.data * out.grad
+            other.grad = other.grad + (self.data * out.grad)
 
         out._backward = _backward
 
         return out
-    
 
-
-    def __pow__(self,other):
-        out = Tensor(self.data**other,_children=(self,other),op='pow')
+    def __pow__(self, other):
+        out = Tensor(self.data**other, _children=(self, other), op='pow')
 
         def _backward():
             self.grad = np.zeros(self.data.shape)
-            self.grad +=(other*self.data**other-1)*out.grad
+            self.grad += (other * self.data**other - 1) * out.grad
 
-    def __getitem__(self,other):
+    def __getitem__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
-        out = Tensor(self.data[other], _children=(self,),op='get item')
+        out = Tensor(self.data[other], _children=(self,), op='get item')
 
         def _backward():
             self.grad[other] += out.grad
 
         out._backward = _backward
         return out
-    
-    def __matmul__(self,other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-    
 
-        out = Tensor(np.matmul(self.data,other.data),_children=(self,other),op='matmul')
+    def __matmul__(self, other):
+        other = other if isinstance(other, Tensor) else Tensor(other)
+
+        out = Tensor(np.matmul(self.data, other.data), _children=(self, other), op='matmul')
 
         def _backward():
             self.grad += out.grad @ other.data.T
             other.grad += (out.grad.T @ self.data).T
-        
+
         out._backward = _backward
         return out
-    def __setitem__(self,idx,other):
+
+    def __setitem__(self, idx, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
         data = self.data.copy()
         data[idx] = other.data
-        out = Tensor(data,_children=(self,other),op='set item',)
+        out = Tensor(data, _children=(self, other), op='set item',)
 
         def _backward():
             other.grad += out.grad[idx]
@@ -209,33 +198,30 @@ class Tensor():
             gradient[idx] = 0.
             self.grad += gradient
 
-
-        out._backward  = _backward
-
+        out._backward = _backward
 
         return out
 
+    def __neg__(self):  # -self
+        return self * -1
 
+    def __radd__(self, other):  # other + self
+        return self + other
 
-    def __neg__(self): # -self
-        return self*-1
+    def __sub__(self, other):  # self - other
+        return self + (-other)
 
-    def __radd__(self, other): # other + self
-        return self+other
-
-    def __sub__(self, other): # self - other
-        return self+(-other)
-
-    def __rsub__(self, other): # other - self
+    def __rsub__(self, other):  # other - self
         return other + (-self)
 
-    def __rmul__(self, other): # other * self
-        return self*other
+    def __rmul__(self, other):  # other * self
+        return self * other
 
-    def __truediv__(self, other): # self / other
-        return self*other**-1
+    def __truediv__(self, other):  # self / other
+        return self * other**-1
 
-    def __rtruediv__(self, other): # other / self
-        return other*self**-1
+    def __rtruediv__(self, other):  # other / self
+        return other * self**-1
+
     def __repr__(self):
         return f"Tensor with values:{self.data} and Gradient of:{self.grad} and shape of:{self.shape}"

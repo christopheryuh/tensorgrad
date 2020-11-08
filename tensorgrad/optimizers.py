@@ -1,34 +1,46 @@
 from typing import List, Optional
-from tensorgrad.engine import *
 import numpy as np
 
-class Optimizer():
-    def __init__(self,parameters,lr,momentum:Optional[float] = 0.9):
+
+from tensorgrad.engine import Tensor
+
+
+class Optimizer(object):
+    def __init__(
+            self,
+            parameters: List[Tensor],
+            lr: float,
+            momentum: Optional[float] = 0.9
+    ):
         self.momentum = momentum
-        self.lr =lr
+        self.lr = lr
         self.parameters = parameters
         self._running_mean = [np.empty_like(p.grad) for p in self.parameters]
-    
+        self._num_steps = 0
+
     def zero_grad(self):
         for param in self.parameters:
-            param.grad = np.zeros_like(param.grad)
-    
-    def step(self):
-        """Update the weights based on the update rule for this optimizer"""
+            param.grad.fill(0)
 
-        if self.momentum is not None:
-            self._update_running_mean()
-            # Take the updates from the running means
-        else:
-            #Take update from the gradient itself
-            pass
+    def step(self):
+        """Update the weights based on the update rule for this optimizer."""
+        self._update_running_mean()
+        self._num_steps += 1
 
     def _update_running_mean(self):
-        for p, rm in zip(self.parameters, self._running_mean):
-            rm = (1 - self.momentum) * (p.grad + self.momentum * rm)        
+        for i, p in enumerate(self.parameters):
+            if self._num_steps == 0:
+                self._running_mean[i][:] = p.grad
+            elif self.momentum is None:
+                # TODO: real running mean using num_steps
+                raise NotImplementedError
+            else:
+                self._running_mean[i] = (1 - self.momentum) * (p.grad + self.momentum * self._running_mean[i])
+            
 
 class SGD(Optimizer):
     def step(self):
         super(SGD, self).step()
-        for i,param in enumerate(self.parameters):
-            param.data = self.lr * (param.data - self._running_mean[i])
+        for i, param in enumerate(self.parameters):
+            param.data -= self.lr * self._running_mean[i]
+
