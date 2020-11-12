@@ -2,7 +2,7 @@ from tensorgrad import engine
 import numpy as np
 
 def random(*args,**kwargs):
-    return engine.Tensor(np.random.normal(*args,**kwargs))
+    return engine.Tensor(np.random.uniform(*args,**kwargs))
 
 def empty(*args,**kwargs):
     return engine.Tensor(np.empty(*args,**kwargs))
@@ -37,6 +37,6 @@ def oneHot(x,depth=None):
     zeros = np.zeros((x.shape[0],depth))
     x = x.reshape((-1,))
     for idx,val in enumerate(x):
-        print(val)
         zeros[idx][val] = 1
+
     return zeros

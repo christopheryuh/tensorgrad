@@ -91,14 +91,13 @@ class Tensor():
 
         return out
 
-    def softmax(self, axis=-1):
-        data = self.data - np.max(self.data)
-        num = np.exp(data)
-        den = np.sum(num, axis=axis, keepdims=True)
-        out = Tensor(num / den)
-
+    def softmax(self):
+        x = self.data - np.max(self.data)           # shift for numerical stability
+        ex = np.exp(x)
+        out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
+        exit()
         def _backward():
-            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)), axis=axis, keepdims=True)
+            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=-1, keepdims=True)
 
         out._backward = _backward
         return out

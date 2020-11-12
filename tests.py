@@ -170,7 +170,7 @@ def make_a_convnet():
 
     (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
-    train_images = train_images.reshape(-1, 1, 28, 28)
+    train_images = train_images.reshape(-1, 1, 28, 28)/255.0
 
     print('got data')
     print(train_labels.shape)
@@ -200,6 +200,7 @@ def make_a_convnet():
         loss_fn=Crossentropy(), label_depth=10,
         optimizer=optimizer,
         epochs=5)
+
 
 
 make_a_convnet()

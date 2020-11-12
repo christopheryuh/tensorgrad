@@ -30,7 +30,7 @@ class Optimizer(object):
     def _update_running_mean(self):
         for i, p in enumerate(self.parameters):
             if self._num_steps == 0:
-                self._running_mean[i][:] = p.grad
+                self._running_mean[i] = p.grad.copy()
             elif self.momentum is None:
                 # TODO: real running mean using num_steps
                 raise NotImplementedError

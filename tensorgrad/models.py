@@ -14,8 +14,13 @@ class Model():
     def add(self,layer):
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
-        for layer in self.layers:
+        for num,layer in enumerate(self.layers):
             x = layer(x,training=True)
+            if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
+                print(x.data,num)
+                print(layer.__class__.__name__)
+                exit()
+                
         return x
     def parameters(self):
         for layer in self.layers:
@@ -24,9 +29,8 @@ class Model():
                     self._parameters = [*self._parameters,param]
         return self._parameters
         
-    def train(self,data,labels,optimizer=None,loss_fn=None,epochs=1,label_depth=None,update_after_epoch=True):
+    def train(self,data,labels,optimizer=None,loss_fn=None,epochs=1,batch_size=16,label_depth=None,update_after_epoch=True):
         assert loss_fn != None
-        loss_fn = loss_fn()
         if optimizer == None:
             print("Warning: There is no optimizer set, default SGD is being used.")
             optimizer = SGD(self.parameters,lr=.001)
@@ -34,18 +38,27 @@ class Model():
             print("Warning: Label depth set to 'None'. Please specify a label depth unless labels already one hot encoded.")
         losslist = []
         
-        print(labels.shape)
 
         if label_depth != None:
             labels = oneHot(labels.reshape(-1,1),depth=label_depth)
 
+        
+
         for epoch in range(epochs):
             avg = []
-            for x,y in zip(data,labels):
-                x = x.reshape(-1,*x.shape)
+            for i in range(0, data.shape[0], batch_size):
 
-                
+                x = data[i:i+batch_size]
+
+                y = labels[i:i+batch_size]
+
+
+                print('xyshape',x.shape, y.shape)
+
                 y_hat = self(x)
+
+                print('y_hat shape', y_hat.shape)
+                exit()
 
                 loss = loss_fn(y_hat,y)
 
