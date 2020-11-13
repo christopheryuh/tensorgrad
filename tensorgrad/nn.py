@@ -134,7 +134,9 @@ class Conv2d():
         x = self.padding(x)
 
         for n in range(shape[0]):
+            
 
+        
             section = x[n]
 
             for i in range(x.shape[2] - self.h2):
