@@ -8,7 +8,7 @@ from tensorgrad.optimizers import *
 from tensorgrad.func import glorot_uniform
 
 
-epsilon = .00000000000001
+epsilon = .001
 
 
 class Activation():
