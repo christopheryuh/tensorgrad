@@ -8,7 +8,7 @@ class Tensor():
     def __init__(self, data, _children=(), op=''):
         self.data = np.array(data)
         self.shape = self.data.shape
-        self.grad = np.zeros_like(self.data).astype(np.float64)
+        self.grad = np.zeros_like(self.data).astype(np.float32)
         self._backward = lambda: None
         self._prev = set(_children)
         self.op = op 
@@ -193,8 +193,8 @@ class Tensor():
         def _backward():
             other.grad += out.grad[idx]
             gradient = out.grad.copy()
-            gradient[idx] = 0.
             self.grad += gradient
+            self.grad[idx] = 0.
 
         out._backward = _backward
 

@@ -1,8 +1,15 @@
 from tensorgrad import engine
 import numpy as np
+import math
 
 def random(*args,**kwargs):
-    return engine.Tensor(np.random.normal(*args,**kwargs))
+    return engine.Tensor(np.random.uniform(*args,**kwargs))
+
+def glorot_uniform(fan_in, fan_out, **kwargs):
+
+    limit = math.sqrt(6 / (fan_in + fan_out))
+
+    return engine.Tensor(np.random.uniform(-limit, limit, **kwargs))
 
 def empty(*args,**kwargs):
     return engine.Tensor(np.empty(*args,**kwargs))

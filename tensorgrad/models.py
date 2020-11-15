@@ -4,6 +4,8 @@ from tensorgrad.utils import *
 from tensorgrad.nn import *
 from matplotlib import pyplot as plt
 
+import numpy as np
+
 
 
 
@@ -15,9 +17,14 @@ class Model():
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
         for num,layer in enumerate(self.layers):
+            plt.imshow(x.data[0, 0])
+            plt.show()
             x = layer(x,training=True)
+            plt.imshow(x.data[0, 0])
+            plt.show()
+            print(x.data)
             if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
-                print(x.data,num)
+                print(num)
                 print(layer.__class__.__name__)
                 exit()
                 

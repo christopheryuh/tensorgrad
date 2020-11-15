@@ -5,7 +5,7 @@ import math
 from tensorgrad.engine import *
 from tensorgrad import utils
 from tensorgrad.optimizers import *
-from tensorgrad.func import *
+from tensorgrad.func import glorot_uniform
 
 
 epsilon = .00000000000001
@@ -53,9 +53,12 @@ class Conv2d():
         self.dilation = dilation
         self.stride = stride
 
-        self.w = random(size=(outputs, inputs, kernel_dim, kernel_dim))
+        self.w = glorot_uniform(inputs, outputs, size=(outputs, inputs, kernel_dim, kernel_dim))
 
-        assert np.any(np.isnan(self.w.data)) == False or np.any(np.isinf(self.w.data))
+        print(np.max(self.w.data.reshape((-1,))))
+
+
+        assert not np.any(np.isnan(self.w.data)) or not np.any(np.isinf(self.w.data))
     
         self.outs = outputs
         self.use_bias = use_bias 
@@ -73,7 +76,7 @@ class Conv2d():
         self.w2 = self.kh // 2
 
         if self.use_bias:
-            self.b = random(self.outs)
+            self.b = zeros((self.outs,))
 
 
         if padding == 'valid':
@@ -105,12 +108,13 @@ class Conv2d():
 
     def get_pixel_value(self,patch, kernel):
 
+        exit()
+
         out = patch.reshape((1,-1,self.kh,self.kw)) * kernel
 
         out = out.sum(axis=3)
         out = out.sum(axis=2)
         out = out.sum(axis=1)
-
 
         return out
 
@@ -127,6 +131,8 @@ class Conv2d():
 
         x = x if isinstance(x, (Tensor)) else Tensor(x)
 
+        assert not np.any(np.isnan(x.data)) or not np.any(np.isinf(x.data))
+
         
         shape = self.get_output_shape(x.shape)
         out = empty(shape)
@@ -141,12 +147,27 @@ class Conv2d():
         
             section = x[n]
 
+            print(n)
+
             for i in range(x.shape[2] - 2*self.h2):
-                for j in range(x.shape[3] - 2*self.h2):
+                for j in range(x.shape[3] - 2*self.w2):
 
                     #print(n,(i,i+self.kh),(j,j+self.kw))
+
+                    pixels = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
+
                     
-                    out[n,:,i,j] = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
+
+                    if np.all(pixels.data == 0):
+
+                        if not np.all(section[:,i:i+self.kh,j:j+self.kw] == 0):
+
+                            print(pixels)
+                            exit()
+
+
+                    
+                    out[n,:,i,j] = pixels 
 
 
 
@@ -159,8 +180,8 @@ class Linear():
     def __init__(self, n_in, n_out, use_bias=True):
         self.use_bias = use_bias
         self.has_vars = True
-        self.w = random(size=(n_in, n_out))
-        self.b = random(size=(1, n_out))
+        self.w = glorot_uniform(n_in, n_out, size=(n_in, n_out))
+        self.b = zeros((1, n_out))
 
     def parameters(self):
         if self.use_bias:
@@ -226,13 +247,13 @@ class MaxPool2d():
 
 
 class BatchNorm():
-    def __init__(self):
+    def __init__(self, input_dim):
         self.running_mean = 0
         self.running_var = 0
         self.n = 0
         self.has_vars = True
-        self.w = random()
-        self.b = random()
+        self.w = ones((input_dim,))
+        self.b = zeros((input_dim,))
 
     def __call__(self, x, training=False):
         self.n += 1
