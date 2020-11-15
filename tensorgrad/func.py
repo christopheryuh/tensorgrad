@@ -2,7 +2,7 @@ from tensorgrad import engine
 import numpy as np
 
 def random(*args,**kwargs):
-    return engine.Tensor(np.random.uniform(*args,**kwargs))
+    return engine.Tensor(np.random.normal(*args,**kwargs))
 
 def empty(*args,**kwargs):
     return engine.Tensor(np.empty(*args,**kwargs))

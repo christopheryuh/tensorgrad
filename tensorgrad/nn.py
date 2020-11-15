@@ -54,6 +54,8 @@ class Conv2d():
         self.stride = stride
 
         self.w = random(size=(outputs, inputs, kernel_dim, kernel_dim))
+
+        assert np.any(np.isnan(self.w.data)) == False or np.any(np.isinf(self.w.data))
     
         self.outs = outputs
         self.use_bias = use_bias 
@@ -103,7 +105,7 @@ class Conv2d():
 
     def get_pixel_value(self,patch, kernel):
 
-        out = patch.reshape(1,-1,self.kh,self.w) * kernel
+        out = patch.reshape((1,-1,self.kh,self.kw)) * kernel
 
         out = out.sum(axis=3)
         out = out.sum(axis=2)
@@ -133,16 +135,18 @@ class Conv2d():
 
         x = self.padding(x)
 
-        for n in range(shape[0]):
+        for n in range(x.shape[0]):
             
 
         
             section = x[n]
 
-            for i in range(x.shape[2] - self.h2):
-                for j in range(x.shape[3] - self.h2):
+            for i in range(x.shape[2] - 2*self.h2):
+                for j in range(x.shape[3] - 2*self.h2):
+
+                    #print(n,(i,i+self.kh),(j,j+self.kw))
                     
-                    out[n,:,i,j] = self.get_pixel_value(section[:,i:int(i+self.h2),j:int(j+self.w2)],self.w[n])
+                    out[n,:,i,j] = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
 
 
 
@@ -215,7 +219,7 @@ class MaxPool2d():
         out = Tensor(pooled)
 
         def _backward():
-            x.grad += x.data * ismax
+            x.grad += np.ones_like(x.data) * ismax
 
         out._backward = _backward 
         return out

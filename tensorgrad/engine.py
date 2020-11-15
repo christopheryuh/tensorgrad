@@ -68,7 +68,7 @@ class Tensor():
                 out.data = func.concat([self.data for _ in range(yd)], axis=ax)
 
             else:
-                raise ValueError(f'Mismatched Shape, {self} and {other}')
+                raise ValueError(f'Mismatched Shape, {self.shape} and {other.shape}')
 
         return out
 
@@ -164,11 +164,10 @@ class Tensor():
             self.grad += (other * self.data**other - 1) * out.grad
 
     def __getitem__(self, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
         out = Tensor(self.data[other], _children=(self,), op='get item')
 
         def _backward():
-            self.grad[other] += out.grad
+            self.grad[other.data] += out.grad
 
         out._backward = _backward
         return out
