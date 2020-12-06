@@ -5,7 +5,7 @@ import math
 from tensorgrad.engine import *
 from tensorgrad import utils
 from tensorgrad.optimizers import *
-from tensorgrad.func import glorot_uniform
+from tensorgrad.func import glorot_uniform, assign
 
 
 epsilon = .001
@@ -88,12 +88,14 @@ class Conv2d():
         if padding == 'same':
 
             def padding(image):
-                out = zeros((image.shape[0], image.shape[1], image.shape[2] + self.h2, image.shape[3] + self.w2))
+                out = zeros((image.shape[0], image.shape[1], image.shape[2] + 2 * self.h2, image.shape[3] + 2 * self.w2))
                 
 
 
-                out[:,:,self.w2:int(image.shape[2]+self.w2),self.h2:int(image.shape[3]+self.h2)] = image
+                indexing = (slice(None), slice(None),slice(self.h2, self.h2+image.shape[2]), slice(self.w2, self.w2+image.shape[3]))
 
+                out = assign(out, indexing, image)
+                
                 return out
 
             self.padding_dims = (self.h2, self.w2)
@@ -108,7 +110,6 @@ class Conv2d():
 
     def get_pixel_value(self,patch, kernel):
 
-        exit()
 
         out = patch.reshape((1,-1,self.kh,self.kw)) * kernel
 
@@ -147,27 +148,14 @@ class Conv2d():
         
             section = x[n]
 
-            print(n)
-
             for i in range(x.shape[2] - 2*self.h2):
                 for j in range(x.shape[3] - 2*self.w2):
 
-                    #print(n,(i,i+self.kh),(j,j+self.kw))
-
                     pixels = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
 
+                    idx = (n, slice(None),i,j)
                     
-
-                    if np.all(pixels.data == 0):
-
-                        if not np.all(section[:,i:i+self.kh,j:j+self.kw] == 0):
-
-                            print(pixels)
-                            exit()
-
-
-                    
-                    out[n,:,i,j] = pixels 
+                    out = assign(out, idx, pixels) 
 
 
 

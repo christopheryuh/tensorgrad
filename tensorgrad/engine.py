@@ -39,6 +39,9 @@ class Tensor():
         self.grad = 1
         for t in reversed(topo):
             t._backward()
+    
+    def __array__(self):
+        return self.data
 
     def reshape(self, shape):
         out = Tensor(self.data.reshape(shape))
@@ -184,21 +187,9 @@ class Tensor():
         out._backward = _backward
         return out
 
+
     def __setitem__(self, idx, other):
-        other = other if isinstance(other, Tensor) else Tensor(other)
-        data = self.data.copy()
-        data[idx] = other.data
-        out = Tensor(data, _children=(self, other), op='set item',)
-
-        def _backward():
-            other.grad += out.grad[idx]
-            gradient = out.grad.copy()
-            self.grad += gradient
-            self.grad[idx] = 0.
-
-        out._backward = _backward
-
-        return out
+        raise ValueError
 
     def __neg__(self):  # -self
         return self * -1

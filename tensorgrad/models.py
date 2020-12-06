@@ -16,17 +16,20 @@ class Model():
     def add(self,layer):
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
+        x = Tensor(np.random.uniform(0,1, size=x.shape))
         for num,layer in enumerate(self.layers):
-            plt.imshow(x.data[0, 0])
+            plt.imshow(np.array(x)[0,0])
+            plt.title('inputs' + layer.__class__.__name__)
             plt.show()
+
             x = layer(x,training=True)
-            plt.imshow(x.data[0, 0])
+
+            plt.imshow(np.array(x)[0,0])
+            plt.title('outputs' + layer.__class__.__name__)
             plt.show()
-            print(x.data)
-            if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
-                print(num)
-                print(layer.__class__.__name__)
-                exit()
+            #if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
+             #   print(num)      
+             #   print('layer', layer.__class__.__name__)
                 
         return x
     def parameters(self):
