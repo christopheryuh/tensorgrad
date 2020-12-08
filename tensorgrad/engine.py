@@ -13,6 +13,9 @@ class Tensor():
         self._prev = set(_children)
         self.op = op 
 
+    def __array__(self):
+        return self.data
+
     def backward(self):
         """Perform backpropagation on this Tensor.
 
@@ -40,8 +43,7 @@ class Tensor():
         for t in reversed(topo):
             t._backward()
     
-    def __array__(self):
-        return self.data
+
 
     def reshape(self, shape):
         out = Tensor(self.data.reshape(shape))
@@ -98,7 +100,6 @@ class Tensor():
         x = self.data - np.max(self.data)           # shift for numerical stability
         ex = np.exp(x)
         out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
-        exit()
         def _backward():
             self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=-1, keepdims=True)
 

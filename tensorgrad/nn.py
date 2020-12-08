@@ -241,7 +241,7 @@ class BatchNorm():
         self.n = 0
         self.has_vars = True
         self.w = ones((input_dim,))
-        self.b = zeros((input_dim,))
+        self.b = zeros((input_dim,)) 
 
     def __call__(self, x, training=False):
         self.n += 1

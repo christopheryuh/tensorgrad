@@ -16,22 +16,34 @@ class Model():
     def add(self,layer):
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
-        x = Tensor(np.random.uniform(0,1, size=x.shape))
+        #x = Tensor(np.random.uniform(0,1, size=x.shape))
         for num,layer in enumerate(self.layers):
-            plt.imshow(np.array(x)[0,0])
+            '''
+            if len(np.array(x)[0,0].shape) < = 1:
+                plt.imshow(np.array(x)[0,0].reshape(1,-1))
+            else:
+                plt.imshow(np.array(x)[0,0])
             plt.title('inputs' + layer.__class__.__name__)
             plt.show()
-
+            '''
             x = layer(x,training=True)
-
-            plt.imshow(np.array(x)[0,0])
+            '''
+            print(np.array(x)[0,0].shape)
+            if len(np.array(x)[0,0].shape) <= 1:
+                plt.imshow(np.array(x)[0,0].reshape(1,-1))
+            else:
+                plt.imshow(np.array(x)[0,0])    
             plt.title('outputs' + layer.__class__.__name__)
             plt.show()
+            
+            print(f"Got to layer number {num+1}")
+            '''
             #if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
              #   print(num)      
              #   print('layer', layer.__class__.__name__)
                 
         return x
+
     def parameters(self):
         for layer in self.layers:
             if layer.has_vars == True:
@@ -63,14 +75,12 @@ class Model():
                 y = labels[i:i+batch_size]
 
 
-                print('xyshape',x.shape, y.shape)
-
                 y_hat = self(x)
 
-                print('y_hat shape', y_hat.shape)
-                exit()
 
                 loss = loss_fn(y_hat,y)
+
+                print(loss)
 
                 optimizer.zero_grad()
 
