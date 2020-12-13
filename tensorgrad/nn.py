@@ -2,9 +2,9 @@ import numpy as np
 
 import math
 
-from tensorgrad.engine import *
+from tensorgrad.engine import Tensor
 from tensorgrad import utils
-from tensorgrad.optimizers import *
+from tensorgrad.optimizers import SGD
 from tensorgrad.func import glorot_uniform, assign
 
 
@@ -65,6 +65,7 @@ class Conv2d():
         self.padding_style = padding
 
 
+
         self.kh = kernel_dim
         self.kw = kernel_dim
 
@@ -75,31 +76,13 @@ class Conv2d():
         self.h2 = self.kh // 2
         self.w2 = self.kh // 2
 
+        if self.padding_style == 'valid':
+            self.padding_dims = [0,0]
+        elif self.padding_style == 'same':
+            self.padding_dims = [self.h2,self.w2]
+
         if self.use_bias:
             self.b = zeros((self.outs,))
-
-
-        if padding == 'valid':
-
-            def padding(image):
-                return image
-            self.padding_dims = (0,0)
-
-        if padding == 'same':
-
-            def padding(image):
-                out = zeros((image.shape[0], image.shape[1], image.shape[2] + 2 * self.h2, image.shape[3] + 2 * self.w2))
-                
-
-
-                indexing = (slice(None), slice(None),slice(self.h2, self.h2+image.shape[2]), slice(self.w2, self.w2+image.shape[3]))
-
-                out = assign(out, indexing, image)
-                
-                return out
-
-            self.padding_dims = (self.h2, self.w2)
-        self.padding = padding
 
     def parameters(self):
         if self.use_bias:
@@ -130,39 +113,37 @@ class Conv2d():
 
     def __call__(self, x, training=False):
 
-        x = x if isinstance(x, (Tensor)) else Tensor(x)
+        x = np.array(x)
 
-        assert not np.any(np.isnan(x.data)) or not np.any(np.isinf(x.data))
+        shape = x.shape
 
-        
-        shape = self.get_output_shape(x.shape)
-        out = empty(shape)
+        output_shape = self.get_output_shape(shape)
 
-        image_shape = shape[-2:]
+        assert self.stride[0] == self.stride[1]
 
-        x = self.padding(x)
+        assert self.h2 == self.w2
+        for n in x:
+            x = x.reshape((1,-1,*x.shape[2:]))
 
-        for n in range(x.shape[0]):
+            if self.padding_style == 'valid':
+                x = utils.im2col(x,*self.kernel_dim,padding=0,stride=self.stride[0])
+            if self.padding_style == 'same':
+                x = utils.im2col(x,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
+            
+            x = x.reshape(-1,self.kh,self.kw)*self.w
             
 
+
+
+            
+
+                
         
-            section = x[n]
+        x = x.reshape(output_shape)
 
-            for i in range(x.shape[2] - 2*self.h2):
-                for j in range(x.shape[3] - 2*self.w2):
+        print(x.shape,shape)
 
-                    pixels = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
-
-                    idx = (n, slice(None),i,j)
-                    
-                    out = assign(out, idx, pixels) 
-
-
-
-        out = out.reshape((x.shape[0], self.outs, *image_shape))
-
-        return out
-
+        return x
 
 class Linear():
     def __init__(self, n_in, n_out, use_bias=True):
@@ -180,7 +161,7 @@ class Linear():
     def __call__(self, x, training=False):
         x = x if isinstance(x, (Tensor)) else Tensor(x)
         x = x @ self.w
-        if self.use_bias:
+        if self.use_bias: 
             x = x + self.b
 
         return x

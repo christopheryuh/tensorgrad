@@ -17,6 +17,9 @@ def empty(*args,**kwargs):
 def zeros(*args, **kwargs):
     return engine.Tensor(np.zeros(*args,**kwargs))
 
+def arange(*args, **kwargs):
+    return engine.Tensor(np.arange(*args, **kwargs))
+
 
 
 

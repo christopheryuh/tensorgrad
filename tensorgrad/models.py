@@ -16,6 +16,7 @@ class Model():
     def add(self,layer):
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
+        x = x if isinstance(x, (Tensor)) else Tensor(x)
         #x = Tensor(np.random.uniform(0,1, size=x.shape))
         for num,layer in enumerate(self.layers):
             '''
@@ -26,6 +27,7 @@ class Model():
             plt.title('inputs' + layer.__class__.__name__)
             plt.show()
             '''
+            #input(f"{layer.__class__.__name__}")
             x = layer(x,training=True)
             '''
             print(np.array(x)[0,0].shape)
