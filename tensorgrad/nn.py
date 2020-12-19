@@ -7,13 +7,37 @@ from tensorgrad import utils
 from tensorgrad.optimizers import SGD
 from tensorgrad.func import glorot_uniform, assign
 
+from abc import ABC, abstractmethod
 
 epsilon = .001
 
 
-class Activation():
+
+class Layer():
+    @abstractmethod
+    def __init__():
+        pass
+
+    @abstractmethod
+    def __call__():
+        pass
+
+class WeightedLayer(Layer):
+    @abstractmethod
+    def parameters():
+        pass
+        
+
+
+class Activation(Layer):
     def __init__(self):
         self.has_vars = False
+
+    def __call__():
+        pass
+    
+    def parameters():
+        return []
 
 
 class Relu(Activation):
@@ -44,7 +68,7 @@ class Crossentropy():
         return out
 
 
-class Conv2d():
+class Conv2d(WeightedLayer):
     def __init__(self, inputs, outputs, kernel_dim, stride=(1,1), use_bias=True, dilation=(1,1),padding='valid'):
 
         
@@ -123,14 +147,23 @@ class Conv2d():
 
         assert self.h2 == self.w2
         for n in x:
-            x = x.reshape((1,-1,*x.shape[2:]))
+            pre_out = None
+            for img in n:
+                img = img.reshape((1,-1,*x.shape[2:]))
 
-            if self.padding_style == 'valid':
-                x = utils.im2col(x,*self.kernel_dim,padding=0,stride=self.stride[0])
-            if self.padding_style == 'same':
-                x = utils.im2col(x,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
-            
-            x = x.reshape(-1,self.kh,self.kw)*self.w
+                if self.padding_style == 'valid':
+                    img = utils.im2col(x,*self.kernel_dim,padding=0,stride=self.stride[0])
+                if self.padding_style == 'same':
+                    img = utils.im2col(x,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
+                img = img.reshape(1,-1,self.kh, self.kw)
+                if pre_out == None:
+                    pre_out = img.copy()
+                else:
+                    pre_out = np.concatenate((pre_out,img))
+
+
+            out_n = pre_out.reshape(-1,self.kh,self.kw)*self.w
+            print(out_n)
             
 
 
@@ -145,7 +178,7 @@ class Conv2d():
 
         return x
 
-class Linear():
+class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
         self.use_bias = use_bias
         self.has_vars = True
@@ -167,7 +200,7 @@ class Linear():
         return x
 
 
-class Flatten():
+class Flatten(Layer):
     def __init__(self):
         self.has_vars = False
 
@@ -176,7 +209,7 @@ class Flatten():
         return x.reshape((x.shape[0], -1))
 
 
-class MaxPool2d():
+class MaxPool2d(WeightedLayer):
     def __init__(self, dimensions):
         self.has_vars = False
         self.dimensions = dimensions
@@ -215,7 +248,7 @@ class MaxPool2d():
         return out
 
 
-class BatchNorm():
+class BatchNorm(WeightedLayer):
     def __init__(self, input_dim):
         self.running_mean = 0
         self.running_var = 0

@@ -48,9 +48,8 @@ class Model():
 
     def parameters(self):
         for layer in self.layers:
-            if layer.has_vars == True:
-                for param in layer.parameters():
-                    self._parameters = [*self._parameters,param]
+            for param in layer.parameters():
+                self._parameters = [*self._parameters,param]
         return self._parameters
         
     def train(self,data,labels,optimizer=None,loss_fn=None,epochs=1,batch_size=16,label_depth=None,update_after_epoch=True):
