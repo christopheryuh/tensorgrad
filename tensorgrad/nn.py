@@ -135,48 +135,59 @@ class Conv2d(WeightedLayer):
         return (n,self.outs, h_out, w_out)
 
 
-    def __call__(self, x, training=False):
-
-        x = np.array(x)
-
+    def _convolve_op(self,x):
         shape = x.shape
 
-        output_shape = self.get_output_shape(shape)
+        n_out,c_out,h_out,w_out = self.get_output_shape(shape)
 
         assert self.stride[0] == self.stride[1]
 
         assert self.h2 == self.w2
-        for n in x:
-            pre_out = None
-            for img in n:
-                img = img.reshape((1,-1,*x.shape[2:]))
 
+        out = np.zeros((*shape[:2],*self.kernel_dim,*shape[2:]))
+
+        for nidx,n in enumerate(x):
+            for cidx, c in enumerate(n):
+
+                c = c.reshape(1,1,*x.shape[2:])
                 if self.padding_style == 'valid':
-                    img = utils.im2col(x,*self.kernel_dim,padding=0,stride=self.stride[0])
+                    img = utils.im2col(c,*self.kernel_dim,padding=0,stride=self.stride[0])
                 if self.padding_style == 'same':
-                    img = utils.im2col(x,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
-                img = img.reshape(1,-1,self.kh, self.kw)
-                if pre_out == None:
-                    pre_out = img.copy()
-                else:
-                    pre_out = np.concatenate((pre_out,img))
+                    img = utils.im2col(c,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
 
-
-            out_n = pre_out.reshape(-1,self.kh,self.kw)*self.w
-            print(out_n)
-            
-
-
-
-            
-
+                print(img.shape)
                 
+                print(out.shape)
+
+                out[nidx,cidx,:,:,:,:] = img.reshape((*self.kernel_dim,*shape[2:]))
+
+        return Tensor(out)
+
+        def _backward():
+            return np.zeros_like(x)
+
+        out._backward = _backward()
+
+
+    def __call__(self, x, training=False):
+
+        x = np.array(x)
+
+        shape = n,c,h,w = x.shape
+
+        n_out,c_out,h_out,w_out = self.get_output_shape(shape)
+
+        x = self._convolve_op(x)
+
+        x = x.reshape((n,1, c, *self.kernel_dim,h_out, w_out))
+
+        kernel = self.w.reshape((1,self.outs,c,*self.kernel_dim,1,1))
+
+        x = x*kernel
+
+        x = x.sum(axis=2).sum(axis=3).sum(axis=4)
+
         
-        x = x.reshape(output_shape)
-
-        print(x.shape,shape)
-
-        return x
 
 class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
