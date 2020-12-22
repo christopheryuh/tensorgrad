@@ -129,7 +129,7 @@ def test_setitem():
 
 def make_a_conv2d_layer():
     x = np.ones((1, 3, 5, 5))
-    layer = Conv2d(3, 1, 3, use_bias=False, padding='same')
+    layer = Conv2d(3, 2, 3, use_bias=False, padding='same')
 
     out = layer(x)
 
@@ -162,7 +162,7 @@ def make_max_pooling():
     print(x.grad)
 
 
-make_max_pooling()
+#make_max_pooling()
 make_a_conv2d_layer()
 
 print("-------Testing Conv-Net----------")

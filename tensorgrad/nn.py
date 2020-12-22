@@ -135,7 +135,8 @@ class Conv2d(WeightedLayer):
         return (n,self.outs, h_out, w_out)
 
 
-    def _convolve_op(self,x):
+    def _convolve_op(self,xT):
+        x = np.array(xT)
         shape = x.shape
 
         n_out,c_out,h_out,w_out = self.get_output_shape(shape)
@@ -155,23 +156,26 @@ class Conv2d(WeightedLayer):
                 if self.padding_style == 'same':
                     img = utils.im2col(c,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
 
-                print(img.shape)
-                
-                print(out.shape)
-
+                print("image shape", img.shape)
                 out[nidx,cidx,:,:,:,:] = img.reshape((*self.kernel_dim,*shape[2:]))
 
-        return Tensor(out)
 
         def _backward():
-            return np.zeros_like(x)
-
-        out._backward = _backward()
+            for nidx in range(x.shape[0]):
+                for cidx in range(x.shape[1]):
+                    if self.padding_style == 'same':
+                        xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)), shape,field_height=self.kh,field_width=self.kw,padding=self.h2,stride=self.stride)
+                    if self.padding_style == 'valid':
+                        xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)),shape,field_height=self.kh,field_width=self.kw,padding=0,stride=self.stride)
+        
+        out = Tensor(out)
+        out._backward = _backward
+        return out
 
 
     def __call__(self, x, training=False):
 
-        x = np.array(x)
+        
 
         shape = n,c,h,w = x.shape
 
@@ -183,11 +187,14 @@ class Conv2d(WeightedLayer):
 
         kernel = self.w.reshape((1,self.outs,c,*self.kernel_dim,1,1))
 
-        x = x*kernel
+        print(x.shape)
+        print(kernel.shape)
 
-        x = x.sum(axis=2).sum(axis=3).sum(axis=4)
+        x = kernel*x
 
-        
+        x = x.sum(axis=2).sum(axis=3).sum(axis=2)
+
+        return x
 
 class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
