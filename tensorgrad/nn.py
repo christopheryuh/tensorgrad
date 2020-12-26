@@ -161,13 +161,14 @@ class Conv2d(WeightedLayer):
 
 
         def _backward():
+            print("got to conv_ops backward")
             for nidx in range(x.shape[0]):
                 for cidx in range(x.shape[1]):
                     if self.padding_style == 'same':
                         xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)), shape,field_height=self.kh,field_width=self.kw,padding=self.h2,stride=self.stride)
                     if self.padding_style == 'valid':
                         xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)),shape,field_height=self.kh,field_width=self.kw,padding=0,stride=self.stride)
-        
+
         out = Tensor(out)
         out._backward = _backward
         return out
@@ -192,7 +193,7 @@ class Conv2d(WeightedLayer):
 
         x = kernel*x
 
-        x = x.sum(axis=2).sum(axis=3).sum(axis=2)
+        x = x.sum(axis=4).sum(axis=3).sum(axis=2)
 
         return x
 
