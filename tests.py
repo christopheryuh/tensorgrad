@@ -128,8 +128,8 @@ def test_setitem():
 
 
 def make_a_conv2d_layer():
-    x = np.ones((1, 3, 5, 5))
-    layer = Conv2d(3, 2, 3, use_bias=False, padding='same')
+    x = np.ones((1, 1, 5, 5))
+    layer = Conv2d(1, 3, 3, use_bias=False, padding='same')
 
     out = layer(x)
 

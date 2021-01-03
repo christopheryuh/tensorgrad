@@ -1,3 +1,4 @@
+
 import numpy as np 
 
 import math
@@ -114,18 +115,6 @@ class Conv2d(WeightedLayer):
         else:
             return [self.w, ]
     
-
-    def get_pixel_value(self,patch, kernel):
-
-
-        out = patch.reshape((1,-1,self.kh,self.kw)) * kernel
-
-        out = out.sum(axis=3)
-        out = out.sum(axis=2)
-        out = out.sum(axis=1)
-
-        return out
-
     def get_output_shape(self,input_shape):
         n, c, h, w = input_shape        
         kh, kw = self.kernel_dim
@@ -171,31 +160,67 @@ class Conv2d(WeightedLayer):
 
         out = Tensor(out)
         out._backward = _backward
+        print("out.shape",out.shape)
         return out
 
 
     def __call__(self, x, training=False):
 
-        
+        x = x if isinstance(x, Tensor) else Tensor(x)
 
         shape = n,c,h,w = x.shape
+        kh, kw = self.kernel_dim
 
         n_out,c_out,h_out,w_out = self.get_output_shape(shape)
 
-        x = self._convolve_op(x)
+        assert self.padding_dims[0] == self.padding_dims[1]
 
-        x = x.reshape((n,1, c, *self.kernel_dim,h_out, w_out))
 
-        kernel = self.w.reshape((1,self.outs,c,*self.kernel_dim,1,1))
+
+        patches = utils.im2col(np.array(x), kh, kw, padding=self.padding_dims[0],stride=self.stride[0])
+
+        #x.shape should be channels*kh*kw, h_out*w_out
+        print(patches.shape, "patches shape")
+        patches = patches.reshape((n,1, c, kh,kw,h_out, w_out))
+
+        kernel = self.w.data.reshape((1,self.outs,c,kh,kw,1,1))
+
+        out = (kernel*patches).sum(axis=(4,3,2))
 
         print(x.shape)
-        print(kernel.shape)
+        
 
-        x = kernel*x
+        out = Tensor(out)
 
-        x = x.sum(axis=4).sum(axis=3).sum(axis=2)
+        def _backward():
 
-        return x
+            #self.w shape is (outputs, inputs, kernel_dim, kernel_dim)
+            #(n,1, c, kh,kw,h_out, w_out)
+
+            #grad = (1,c,kh,kw)
+            #out.grad = (n,c,h_out,w_out)
+
+            grad = patches * out.grad.reshape((n,c_out,1,1,1,h_out,w_out))
+            print(grad.shape,"gradshape")
+            grad = grad.sum(axis=(0,6,5))    
+            print(grad.shape,"gradshape")
+            self.w.grad += grad.reshape((c_out,1,kh,kw))
+
+            #(1,self.outs,c,kh,kw,1,1)                           
+            #out.grad = (n,c_out,h_out,w_out)
+            #channels*kh*kw, h_out*w_out
+            print("kernel shape", kernel.shape, "out.grad.shape",out.grad.shape)
+            grad = kernel*out.grad.reshape(n,c_out,1,1,1,h_out*w_out)
+            print(grad.shape,"gradshape")
+            x.grad += utils.col2im(grad.reshape(c*kh*kw, h_out*w_out)
+                                    (n,c,h,w),
+                                    field_height=self.kh,
+                                    field_width=self.kw,
+                                    padding=self.stride[0])
+            
+        out._backward = _backward
+
+        return out
 
 class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
