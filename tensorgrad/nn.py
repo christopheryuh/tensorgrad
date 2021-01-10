@@ -48,7 +48,7 @@ class Crossentropy():
 
 
 class Conv2d():
-    def __init__(self, inputs: int, outputs: int, kernel_dim: int, stride: tuple = (1,1), use_bias: bool = True, padding: string = 'valid'):
+    def __init__(self, inputs: int, outputs: int, kernel_dim: int, stride: tuple = (1,1), use_bias: bool = True, dilation: tuple = (1,1), padding: string = 'valid'):
         """[summary]
 
         Args:
@@ -57,10 +57,11 @@ class Conv2d():
             kernel_dim (int): [description]
             stride (tuple, optional): [description]. Defaults to (1,1).
             use_bias (bool, optional): [description]. Defaults to True.
+            dilation (tuple, optional): [description]. Defaults to (1,1)
             padding (string, optional): [description]. Defaults to 'valid'.
 
         Returns:
-            [Tensor]: This is the output of the convolutional layer. The two padding options are 'valid' and 'same'.
+            [Tensor]: This is the output of the convolutional layer. The two padding options are 'valid' and 
         """
 
 
