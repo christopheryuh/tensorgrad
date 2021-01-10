@@ -27,6 +27,9 @@ class WeightedLayer(Layer):
     def parameters(self):
         pass
 
+class NonWeightedLayer(Layer):
+    def parameters(self):
+        return []
 
 class Activation(Layer):
     def __init__(self):
@@ -55,7 +58,7 @@ class Softmax(Activation):
 
 class Crossentropy():
     def __call__(self, y_hat, y):
-        labels = y
+        labels = np.array(y)
         out = Tensor(-1 * labels * np.log(y_hat.data + epsilon))
         out = out.sum()
 
@@ -209,7 +212,7 @@ class Linear(WeightedLayer):
         return x
 
 
-class Flatten(Layer):
+class Flatten(NonWeightedLayer):
     def __init__(self):
         self.has_vars = False
 
@@ -218,7 +221,7 @@ class Flatten(Layer):
         return x.reshape((x.shape[0], -1))
 
 
-class MaxPool2d(WeightedLayer):
+class MaxPool2d(NonWeightedLayer):
     def __init__(self, dimensions):
         self.has_vars = False
         self.dimensions = dimensions
