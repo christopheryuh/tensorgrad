@@ -14,7 +14,7 @@ class Model():
         self.layers = layers
         self._parameters = []
     def add(self,layer):
-        self.layers = [*self.layers,layer]
+        self.layers = [*self.layers,layer]  
     def __call__(self,x,training=False):
         x = x if isinstance(x, (Tensor)) else Tensor(x)
         #x = Tensor(np.random.uniform(0,1, size=x.shape))
@@ -63,7 +63,7 @@ class Model():
         
 
         if label_depth != None:
-            labels = oneHot(labels.reshape(-1,1),depth=label_depth)
+            labels = oneHot(labels.reshape((-1,1)),depth=label_depth)
 
         
 

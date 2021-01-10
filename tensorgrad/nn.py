@@ -1,12 +1,11 @@
 
-import numpy as np 
-
+import numpy as np
 import math
 
 from tensorgrad.engine import Tensor
 from tensorgrad import utils
 from tensorgrad.optimizers import SGD
-from tensorgrad.func import glorot_uniform, assign
+from tensorgrad.func import glorot_uniform, assign, zeros
 
 from abc import ABC, abstractmethod
 
@@ -25,9 +24,8 @@ class Layer():
 
 class WeightedLayer(Layer):
     @abstractmethod
-    def parameters():
+    def parameters(self):
         pass
-        
 
 
 class Activation(Layer):
@@ -36,10 +34,9 @@ class Activation(Layer):
 
     def __call__():
         pass
-    
-    def parameters():
-        return []
 
+    def parameters(self,):
+        return []
 
 class Relu(Activation):
     def __call__(self, x, training=False):
@@ -70,9 +67,16 @@ class Crossentropy():
 
 
 class Conv2d(WeightedLayer):
-    def __init__(self, inputs, outputs, kernel_dim, stride=(1,1), use_bias=True, dilation=(1,1),padding='valid'):
+    def __init__(self,
+                inputs,
+                outputs,
+                kernel_dim,
+                stride=(1,1),
+                use_bias=True,
+                dilation=(1,1),
+                padding='valid'):
 
-        
+
         assert padding in {'valid', 'same'}
 
         self.dilation = dilation
@@ -84,11 +88,10 @@ class Conv2d(WeightedLayer):
 
 
         assert not np.any(np.isnan(self.w.data)) or not np.any(np.isinf(self.w.data))
-    
-        self.outs = outputs
-        self.use_bias = use_bias 
-        self.padding_style = padding
 
+        self.outs = outputs
+        self.use_bias = use_bias
+        self.padding_style = padding
 
 
         self.kh = kernel_dim
@@ -114,54 +117,16 @@ class Conv2d(WeightedLayer):
             return [self.w, self.b]
         else:
             return [self.w, ]
-    
+
     def get_output_shape(self,input_shape):
-        n, c, h, w = input_shape        
+        n, c, h, w = input_shape
         kh, kw = self.kernel_dim
-        h_out = math.floor((h + 2 * self.padding_dims[0] - self.dilation[0] * (kh - 1) - 1) / self.stride[0] + 1)        
-        w_out = math.floor((w + 2 * self.padding_dims[1] - self.dilation[1] * (kw - 1) - 1) / self.stride[1] + 1)
+        padding = self.padding_dims[0]
+        h_out = math.floor((h + 2 * padding - self.dilation[0] * (kh - 1) - 1) / self.stride[0] + 1)
+        w_out = math.floor((w + 2 * padding - self.dilation[1] * (kw - 1) - 1) / self.stride[1] + 1)
 
         return (n,self.outs, h_out, w_out)
 
-
-    def _convolve_op(self,xT):
-        x = np.array(xT)
-        shape = x.shape
-
-        n_out,c_out,h_out,w_out = self.get_output_shape(shape)
-
-        assert self.stride[0] == self.stride[1]
-
-        assert self.h2 == self.w2
-
-        out = np.zeros((*shape[:2],*self.kernel_dim,*shape[2:]))
-
-        for nidx,n in enumerate(x):
-            for cidx, c in enumerate(n):
-
-                c = c.reshape(1,1,*x.shape[2:])
-                if self.padding_style == 'valid':
-                    img = utils.im2col(c,*self.kernel_dim,padding=0,stride=self.stride[0])
-                if self.padding_style == 'same':
-                    img = utils.im2col(c,*self.kernel_dim,padding=self.h2,stride=self.stride[0])
-
-                print("image shape", img.shape)
-                out[nidx,cidx,:,:,:,:] = img.reshape((*self.kernel_dim,*shape[2:]))
-
-
-        def _backward():
-            print("got to conv_ops backward")
-            for nidx in range(x.shape[0]):
-                for cidx in range(x.shape[1]):
-                    if self.padding_style == 'same':
-                        xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)), shape,field_height=self.kh,field_width=self.kw,padding=self.h2,stride=self.stride)
-                    if self.padding_style == 'valid':
-                        xT.grad[nidx,cidx,:,:,:,:] = utils.col2im((out[nidx,cidx,:,:,:,:]*out[nidx,cidx,:,:,:,:].grad).reshape((self.kh*self.kw,h_out*w_out)),shape,field_height=self.kh,field_width=self.kw,padding=0,stride=self.stride)
-
-        out = Tensor(out)
-        out._backward = _backward
-        print("out.shape",out.shape)
-        return out
 
 
     def __call__(self, x, training=False):
@@ -175,9 +140,9 @@ class Conv2d(WeightedLayer):
 
         assert self.padding_dims[0] == self.padding_dims[1]
 
+        padding=self.padding_dims[0]
 
-
-        patches = utils.im2col(np.array(x), kh, kw, padding=self.padding_dims[0],stride=self.stride[0])
+        patches = utils.im2col(np.array(x), kh, kw, padding=padding,stride=self.stride[0])
 
         #x.shape should be channels*kh*kw, h_out*w_out
         print(patches.shape, "patches shape")
@@ -188,7 +153,6 @@ class Conv2d(WeightedLayer):
         out = (kernel*patches).sum(axis=(4,3,2))
 
         print(x.shape)
-        
 
         out = Tensor(out)
 
@@ -230,6 +194,7 @@ class Linear(WeightedLayer):
         self.b = zeros((1, n_out))
 
     def parameters(self):
+        
         if self.use_bias:
             return [self.w, self.b]
         else:
