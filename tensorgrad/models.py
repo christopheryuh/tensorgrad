@@ -46,7 +46,7 @@ class Model():
         for epoch in range(epochs):
             avg = []
             for t, i in enumerate(range(0, data.shape[0], batch_size)):
-                if t % 10000 == 0:
+                if t % 10 == 0:
                     print(f'iter {i} / {data.shape[0]}')
 
                 x = data[i:i + batch_size]
