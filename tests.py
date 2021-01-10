@@ -128,10 +128,13 @@ def test_setitem():
 
 
 def make_a_conv2d_layer():
-    x = np.ones((1, 3, 5, 5))
-    layer = Conv2d(3, 3, 3, use_bias=False, padding='same')
+    x = np.ones((1, 1, 5, 5))
+    layer = Conv2d(1, 3, 3, use_bias=False, padding='same')
 
     out = layer(x)
+
+    print(out)
+    print(out.shape)
 
     print('going backward')
     z = out.sum()
@@ -159,7 +162,8 @@ def make_max_pooling():
     print(x.grad)
 
 
-make_max_pooling()
+#make_max_pooling()
+#make_a_conv2d_layer()
 
 print("-------Testing Conv-Net----------")
 
@@ -179,13 +183,12 @@ def make_a_convnet():
     convnet.add(Conv2d(1, 8, 3, padding='same'))
     convnet.add(Relu())
     convnet.add(MaxPool2d((2, 2)))
-    convnet.add(Conv2d(8, 16, 3, padding='same'))
+    convnet.add(Conv2d(8, 8, 3, padding='same'))
     convnet.add(Relu())
     convnet.add(MaxPool2d((2, 2)))
-    convnet.add(Conv2d(16, 32, 3, padding='same'))
-    convnet.add(Relu())
+    convnet.add(Conv2d(8, 8, 3, padding='same'))
     convnet.add(Flatten())
-    convnet.add(Linear(32 * 7 * 7, 10))
+    convnet.add(Linear(8 * 7 * 7, 10))
     convnet.add(Softmax())
 
     print(len(convnet.parameters()))
@@ -197,7 +200,7 @@ def make_a_convnet():
 
     convnet.train(
         train_images, train_labels,
-        loss_fn=Crossentropy(), label_depth=10,
+        loss_fn=Crossentropy(), label_depth=10, batch_size=100,
         optimizer=optimizer,
         batch_size=20,
         epochs=5)

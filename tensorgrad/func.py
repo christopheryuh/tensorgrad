@@ -15,7 +15,11 @@ def empty(*args,**kwargs):
     return engine.Tensor(np.empty(*args,**kwargs))
 
 def zeros(*args, **kwargs):
-    return engine.Tensor(np.zeros(*args,**kwargs))
+    return engine.Tensor(np.zeros(*args,**kwargs))\
+
+
+def arange(*args, **kwargs):
+    return engine.Tensor(np.arange(*args, **kwargs))
 
 
 
@@ -47,3 +51,21 @@ def oneHot(x,depth=None):
         zeros[idx][val] = 1
 
     return zeros
+
+
+def assign(x, indexing, y):
+    y = y if isinstance(y, engine.Tensor) else engine.Tensor(y)
+    data = x.data.copy()
+    data[indexing] = y.data
+    out = engine.Tensor(data, _children=(x, y), op='set item',)
+
+    def _backward():
+        y.grad += out.grad[indexing]
+        gradient = out.grad.copy()
+        x.grad += gradient
+        x.grad[indexing] = 0.
+
+    out._backward = _backward
+
+    return out
+    
