@@ -163,7 +163,7 @@ def make_max_pooling():
 
 
 #make_max_pooling()
-make_a_conv2d_layer()
+#make_a_conv2d_layer()
 
 print("-------Testing Conv-Net----------")
 
@@ -200,7 +200,7 @@ def make_a_convnet():
 
     convnet.train(
         train_images, train_labels,
-        loss_fn=Crossentropy(), label_depth=10, batch_size=1,
+        loss_fn=Crossentropy(), label_depth=10, batch_size=100,
         optimizer=optimizer,
         epochs=5)
 

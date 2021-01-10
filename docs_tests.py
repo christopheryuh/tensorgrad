@@ -1,7 +1,7 @@
 #---------Making the Dataset---------
 from tensorgrad.engine import Tensor
 
-x = Tensor([[1,0,0],[0,1,0],[1,1,1],[0,0,0],[1,1,0],[0,0,1]])
+x = Tensor([[.9,.1,.1],[.1,.9,.1],[.9,.9,.9],[.1,.1,.1],[.9,.9,0],[.1,.1,.9]])
 
 y = Tensor([1,0,1,0,1,0])
 
@@ -28,4 +28,4 @@ from tensorgrad.optimizers import SGD
 optimizer = SGD(model.parameters(),lr=0.1)
 
 
-model.train(x, y, loss_fn=nn.Crossentropy(), label_depth=None,batch_size=1,optimizer=optimizer)
+model.train(x, y, loss_fn=nn.Crossentropy(), epochs=10,label_depth=None,batch_size=1,optimizer=optimizer)

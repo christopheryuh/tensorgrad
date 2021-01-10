@@ -81,7 +81,6 @@ class Model():
 
                 loss = loss_fn(y_hat,y)
 
-                print(loss)
 
                 optimizer.zero_grad()
 
@@ -91,13 +90,13 @@ class Model():
 
                 optimizer.step()
 
-                avg.append(loss)
+                avg.append(loss.data)
 
             if update_after_epoch:
-                losslist.append(sum(avg[-y.shape[0]:])/y.shape[0])
-                print('losslist',losslist)
-                print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+                losslist.append(sum(losslist[-y.shape[0]:])/y.shape[0])
+                print(f"epoch:{epoch}\t loss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
         if update_after_epoch:
+            #print(losslist)
             plt.plot(range(len(losslist)),losslist)
             plt.show()
 
