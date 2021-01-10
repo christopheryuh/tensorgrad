@@ -12,8 +12,7 @@ from abc import ABC, abstractmethod
 epsilon = .001
 
 
-
-class Layer():
+class Layer(ABC):
     @abstractmethod
     def __init__():
         pass
@@ -21,6 +20,7 @@ class Layer():
     @abstractmethod
     def __call__():
         pass
+
 
 class WeightedLayer(Layer):
     @abstractmethod
@@ -35,8 +35,9 @@ class Activation(Layer):
     def __call__():
         pass
 
-    def parameters(self,):
+    def parameters(self):
         return []
+
 
 class Relu(Activation):
     def __call__(self, x, training=False):
@@ -68,14 +69,13 @@ class Crossentropy():
 
 class Conv2d(WeightedLayer):
     def __init__(self,
-                inputs,
-                outputs,
-                kernel_dim,
-                stride=(1,1),
-                use_bias=True,
-                dilation=(1,1),
-                padding='valid'):
-
+                 inputs,
+                 outputs,
+                 kernel_dim,
+                 stride=(1, 1),
+                 use_bias=True,
+                 dilation=(1, 1),
+                 padding='valid'):
 
         assert padding in {'valid', 'same'}
 
@@ -84,8 +84,7 @@ class Conv2d(WeightedLayer):
 
         self.w = glorot_uniform(inputs, outputs, size=(outputs, inputs, kernel_dim, kernel_dim))
 
-        print(np.max(self.w.data.reshape((-1,))))
-
+        # print(np.max(self.w.data.reshape((-1,))))
 
         assert not np.any(np.isnan(self.w.data)) or not np.any(np.isinf(self.w.data))
 
@@ -93,11 +92,10 @@ class Conv2d(WeightedLayer):
         self.use_bias = use_bias
         self.padding_style = padding
 
-
         self.kh = kernel_dim
         self.kw = kernel_dim
 
-        self.kernel_dim = (kernel_dim,kernel_dim)
+        self.kernel_dim = (kernel_dim, kernel_dim)
 
         self.has_vars = True
 
@@ -105,9 +103,9 @@ class Conv2d(WeightedLayer):
         self.w2 = self.kh // 2
 
         if self.padding_style == 'valid':
-            self.padding_dims = [0,0]
+            self.padding_dims = [0, 0]
         elif self.padding_style == 'same':
-            self.padding_dims = [self.h2,self.w2]
+            self.padding_dims = [self.h2, self.w2]
 
         if self.use_bias:
             self.b = zeros((self.outs,))
@@ -118,73 +116,78 @@ class Conv2d(WeightedLayer):
         else:
             return [self.w, ]
 
-    def get_output_shape(self,input_shape):
+    def get_output_shape(self, input_shape):
         n, c, h, w = input_shape
         kh, kw = self.kernel_dim
         padding = self.padding_dims[0]
         h_out = math.floor((h + 2 * padding - self.dilation[0] * (kh - 1) - 1) / self.stride[0] + 1)
         w_out = math.floor((w + 2 * padding - self.dilation[1] * (kw - 1) - 1) / self.stride[1] + 1)
 
-        return (n,self.outs, h_out, w_out)
-
-
+        return (n, self.outs, h_out, w_out)
 
     def __call__(self, x, training=False):
 
         x = x if isinstance(x, Tensor) else Tensor(x)
 
-        shape = n,c,h,w = x.shape
+        shape = n, c, h, w = x.shape
         kh, kw = self.kernel_dim
 
-        n_out,c_out,h_out,w_out = self.get_output_shape(shape)
+        n_out, c_out, h_out, w_out = self.get_output_shape(shape)
 
         assert self.padding_dims[0] == self.padding_dims[1]
 
-        padding=self.padding_dims[0]
+        padding = self.padding_dims[0]
 
-        patches = utils.im2col(np.array(x), kh, kw, padding=padding,stride=self.stride[0])
+        # (n, channels*kh*kw, h_out*w_out)?
+        patches = utils.im2col(np.array(x), kh, kw, padding=padding, stride=self.stride[0])
 
-        #x.shape should be channels*kh*kw, h_out*w_out
-        print(patches.shape, "patches shape")
-        patches = patches.reshape((n,1, c, kh,kw,h_out, w_out))
+        # (N, c_out, C, kh, kw, H', W')
+        patches = patches.reshape((n, 1, c, kh, kw, h_out, w_out))
+        # print("patches", patches.shape)
 
-        kernel = self.w.data.reshape((1,self.outs,c,kh,kw,1,1))
+        # (1, c_out, C, ky, kw, 1, 1)
+        kernel = self.w.data.reshape((1, self.outs, c, kh, kw, 1, 1))
 
-        out = (kernel*patches).sum(axis=(4,3,2))
+        out = (kernel * patches).sum(axis=(4, 3, 2))
 
-        print(x.shape)
+        # print('x', x.shape)
+        # print('out', out.shape)
 
         out = Tensor(out)
 
         def _backward():
 
-            #self.w shape is (outputs, inputs, kernel_dim, kernel_dim)
+            # self.w shape is (outputs, inputs, kernel_dim, kernel_dim)
             #(n,1, c, kh,kw,h_out, w_out)
 
             #grad = (1,c,kh,kw)
             #out.grad = (n,c,h_out,w_out)
 
-            grad = patches * out.grad.reshape((n,c_out,1,1,1,h_out,w_out))
-            print(grad.shape,"gradshape")
-            grad = grad.sum(axis=(0,6,5))    
-            print(grad.shape,"gradshape")
-            self.w.grad += grad.reshape((c_out,1,kh,kw))
+            # pretty sure correct
+            grad = patches * out.grad.reshape(n, c_out, 1, 1, 1, h_out, w_out)
+            grad = grad.sum(axis=(0, 6, 5))    
+            self.w.grad += grad.reshape((c_out, 1, kh, kw))
 
-            #(1,self.outs,c,kh,kw,1,1)                           
+            # (1,self.outs,c,kh,kw,1,1)                           
             #out.grad = (n,c_out,h_out,w_out)
             #channels*kh*kw, h_out*w_out
-            print("kernel shape", kernel.shape, "out.grad.shape",out.grad.shape)
-            grad = kernel*out.grad.reshape(n,c_out,1,1,1,h_out*w_out)
-            print(grad.shape,"gradshape")
-            x.grad += utils.col2im(grad.reshape(c*kh*kw, h_out*w_out)
-                                    (n,c,h,w),
-                                    field_height=self.kh,
-                                    field_width=self.kw,
-                                    padding=self.stride[0])
-            
+            # print("kernel shape", kernel.shape, "out.grad.shape", out.grad.shape)
+
+            # out: (N, C_out, H', W')
+            # (1, c_out, C, ky, kw, 1, 1) * (N, C-out, 1, 1, 1, H', W')
+            patches_grad = kernel * out.grad.reshape(n, c_out, 1, 1, 1, h_out, w_out)
+            # sum over c_out dim, since image is duplicated for each output channel
+            patches_grad = patches_grad.sum(axis=1, keepdims=True)
+            x.grad += utils.col2im(patches_grad.reshape(c * kh * kw, h_out * w_out),
+                                   (n, c, h, w),
+                                   field_height=self.kh,
+                                   field_width=self.kw,
+                                   padding=padding)
+
         out._backward = _backward
 
         return out
+
 
 class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
@@ -194,7 +197,7 @@ class Linear(WeightedLayer):
         self.b = zeros((1, n_out))
 
     def parameters(self):
-        
+
         if self.use_bias:
             return [self.w, self.b]
         else:
@@ -214,8 +217,10 @@ class Flatten(Layer):
         self.has_vars = False
 
     def __call__(self, x, training=False):
-
         return x.reshape((x.shape[0], -1))
+
+    def parameters(self):
+        return []
 
 
 class MaxPool2d(WeightedLayer):
@@ -255,6 +260,9 @@ class MaxPool2d(WeightedLayer):
 
         out._backward = _backward 
         return out
+
+    def parameters(self):
+        return []
 
 
 class BatchNorm(WeightedLayer):
