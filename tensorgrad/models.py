@@ -4,6 +4,7 @@ from tensorgrad.utils import *
 from tensorgrad.nn import *
 from matplotlib import pyplot as plt
 
+from tqdm import tqdm
 import numpy as np
 
 
@@ -16,15 +17,13 @@ class Model():
     def add(self,layer):
         self.layers = [*self.layers,layer]
     def __call__(self,x,training=False):
+
+        x = x if isinstance(x, Tensor) else Tensor(x)
+
         for num,layer in enumerate(self.layers):
-            plt.imshow(x.data[0, 0])
-            plt.show()
             x = layer(x,training=True)
-            plt.imshow(x.data[0, 0])
-            plt.show()
-            print(x.data)
             if np.any(np.isnan(x.data)) or np.any(np.isinf(x.data)):
-                print(num)
+                print(x.data,num)
                 print(layer.__class__.__name__)
                 exit()
                 
@@ -53,43 +52,38 @@ class Model():
 
         for epoch in range(epochs):
             avg = []
-            for i in range(0, data.shape[0], batch_size):
-
+            #for i in tqdm(range(0, data.shape[0], batch_size)):
+            '''
                 x = data[i:i+batch_size]
 
                 y = labels[i:i+batch_size]
 
+            '''
+            x = data[0:0+batch_size]
+            y =  labels[0:0+batch_size]
+            y_hat = self(x)
 
-                print('xyshape',x.shape, y.shape)
+            loss = loss_fn(y_hat,y)
 
-                y_hat = self(x)
-
-                print('y_hat shape', y_hat.shape)
-                exit()
-
-                loss = loss_fn(y_hat,y)
-
-                optimizer.zero_grad()
+            optimizer.zero_grad()
 
 
-                loss.backward()
+            loss.backward()
 
+            optimizer.step()
 
-                optimizer.step()
-
-                avg.append(loss)
+            avg.append(loss.data)
 
             if update_after_epoch:
                 losslist.append(sum(avg[-y.shape[0]:])/y.shape[0])
-                print('losslist',losslist)
-                print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+                print(f"epoch:{epoch}\tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
         if update_after_epoch:
             plt.plot(range(len(losslist)),losslist)
             plt.show()
 
         data = np.array(data)
         
-        pred = self(data[0])
+        pred = self(data[0].reshape(1,-1,28,28))
         plt.imshow(data[0].reshape((28,28)))
         plt.show()
         print(np.argmax(pred.data))

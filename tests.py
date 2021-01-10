@@ -199,6 +199,7 @@ def make_a_convnet():
         train_images, train_labels,
         loss_fn=Crossentropy(), label_depth=10,
         optimizer=optimizer,
+        batch_size=20,
         epochs=5)
 
 

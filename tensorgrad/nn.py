@@ -2,6 +2,9 @@ import numpy as np
 
 import math
 
+from typing import Union
+
+
 from tensorgrad.engine import *
 from tensorgrad import utils
 from tensorgrad.optimizers import *
@@ -45,9 +48,22 @@ class Crossentropy():
 
 
 class Conv2d():
-    def __init__(self, inputs, outputs, kernel_dim, stride=(1,1), use_bias=True, dilation=(1,1),padding='valid'):
+    def __init__(self, inputs: int, outputs: int, kernel_dim: int, stride: tuple = (1,1), use_bias: bool = True, padding: string = 'valid'):
+        """[summary]
 
-        
+        Args:
+            inputs (int): [description]
+            outputs (int): [description]
+            kernel_dim (int): [description]
+            stride (tuple, optional): [description]. Defaults to (1,1).
+            use_bias (bool, optional): [description]. Defaults to True.
+            padding (string, optional): [description]. Defaults to 'valid'.
+
+        Returns:
+            [Tensor]: This is the output of the convolutional layer. The two padding options are 'valid' and 'same'.
+        """
+
+
         assert padding in {'valid', 'same'}
 
         self.dilation = dilation
@@ -96,7 +112,7 @@ class Conv2d():
 
                 return out
 
-            self.padding_dims = (self.h2, self.w2)
+            self.padding_dims = (self.h2, self.w2)  
         self.padding = padding
 
     def parameters(self):
@@ -108,9 +124,8 @@ class Conv2d():
 
     def get_pixel_value(self,patch, kernel):
 
-        exit()
-
         out = patch.reshape((1,-1,self.kh,self.kw)) * kernel
+
 
         out = out.sum(axis=3)
         out = out.sum(axis=2)
@@ -135,7 +150,7 @@ class Conv2d():
 
         
         shape = self.get_output_shape(x.shape)
-        out = empty(shape)
+        out = zeros(shape)
 
         image_shape = shape[-2:]
 
@@ -147,8 +162,6 @@ class Conv2d():
         
             section = x[n]
 
-            print(n)
-
             for i in range(x.shape[2] - 2*self.h2):
                 for j in range(x.shape[3] - 2*self.w2):
 
@@ -156,18 +169,19 @@ class Conv2d():
 
                     pixels = self.get_pixel_value(section[:,i:i+self.kh,j:j+self.kw],self.w)
 
-                    
-
+                 
+                    '''
                     if np.all(pixels.data == 0):
 
                         if not np.all(section[:,i:i+self.kh,j:j+self.kw] == 0):
 
                             print(pixels)
                             exit()
+                    '''
 
-
-                    
-                    out[n,:,i,j] = pixels 
+                    out_i = math.floor((i + 2 * self.padding_dims[0] - self.dilation[0] * (self.kh - 1) - 1) / self.stride[0] + 1)
+                    out_j = math.floor((i + 2 * self.padding_dims[1] - self.dilation[1] * (self.kw - 1) - 1) / self.stride[1] + 1)
+                    out[n,:,out_i,out_j] = pixels 
 
 
 

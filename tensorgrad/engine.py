@@ -95,7 +95,7 @@ class Tensor():
         x = self.data - np.max(self.data)           # shift for numerical stability
         ex = np.exp(x)
         out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
-        exit()
+        
         def _backward():
             self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=-1, keepdims=True)
 
