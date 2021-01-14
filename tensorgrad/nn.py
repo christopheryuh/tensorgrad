@@ -46,6 +46,15 @@ class Activation(Layer):
 
 class Relu(Activation):
     def __call__(self, x, training=False):
+        """Take from Docusaurus website
+
+        Args:
+            x ([type]): [description]
+            training (bool, optional): [description]. Defaults to False.
+
+        Returns:
+            [type]: [description]
+        """
         return x.relu()
 
 
@@ -74,7 +83,7 @@ class Crossentropy():
 
 class Conv2d():
     def __init__(self, inputs: int, outputs: int, kernel_dim: int, stride: tuple = (1,1), use_bias: bool = True, dilation: tuple = (1,1), padding: string = 'valid'):
-        """[summary]
+        """This is the convolutional layer.
 
         Args:
             inputs (int): The number of inputs to the convolution.
@@ -82,13 +91,11 @@ class Conv2d():
             kernel_dim (int): The width and height of the kernel that will be applied to the image.
             stride (tuple, optional): The stride of which the kernel will be applied. Defaults to (1,1).
             use_bias (bool, optional): If true, adds a bias. Defaults to True.
-            dilation (tuple, optional): [description]. Defaults to (1,1)
-            padding (string, optional): [description]. Defaults to 'valid'.
+            padding (string, optional): The padding around the image that will be convolved. Defaults to 'valid'.
 
         Returns:
-            [Tensor]: This is the output of the convolutional layer. The two padding options are 'valid' and 
+            [Tensor]: This is the output of the convolutional layer. These are the input images, with the kernel applied.
         """
-
 
         assert padding in {'valid', 'same'}
 
@@ -139,6 +146,8 @@ class Conv2d():
         return (n, self.outs, h_out, w_out)
 
     def __call__(self, x, training=False):
+
+
 
         x = x if isinstance(x, Tensor) else Tensor(x)
 
