@@ -1,5 +1,7 @@
 # tensorgrad
-This is a easy to use Automatic Differention engine with a library for implementations of neural networks.
+This is a easy to use Automatic Differention engine built on top of numpy with a library for implementations of neural networks.
+
+#### This project was tested with and based on PyTorch.
 
 
 
@@ -19,7 +21,7 @@ pip install git+https://github.com/christopheryuh/tensorgrad.git
 
 ## Contributing
 
-Just fork, then make the appropriate changes, then make a pull request that describest the changes you made.
+Just fork, then make the appropriate changes, then make a pull request that describes the changes you made.
 
 
 
