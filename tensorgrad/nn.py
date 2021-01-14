@@ -77,11 +77,11 @@ class Conv2d():
         """[summary]
 
         Args:
-            inputs (int): [description]
-            outputs (int): [description]
-            kernel_dim (int): [description]
-            stride (tuple, optional): [description]. Defaults to (1,1).
-            use_bias (bool, optional): [description]. Defaults to True.
+            inputs (int): The number of inputs to the convolution.
+            outputs (int): The number of outputs to the convolution
+            kernel_dim (int): The width and height of the kernel that will be applied to the image.
+            stride (tuple, optional): The stride of which the kernel will be applied. Defaults to (1,1).
+            use_bias (bool, optional): If true, adds a bias. Defaults to True.
             dilation (tuple, optional): [description]. Defaults to (1,1)
             padding (string, optional): [description]. Defaults to 'valid'.
 

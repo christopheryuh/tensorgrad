@@ -1,5 +1,6 @@
 # tensorgrad
-This is a project with tensors!
+This is a easy to use Automatic Differention engine with a library for implementations of neural networks.
+
 
 
 
@@ -9,9 +10,11 @@ This is a project with tensors!
 
 ## Installation
 
+```
+pip install git+https://github.com/christopheryuh/tensorgrad.git
 
+```
 
-## Usage
 
 
 
