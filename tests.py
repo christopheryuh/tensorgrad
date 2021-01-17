@@ -206,4 +206,34 @@ def make_a_convnet():
 
 
 
-make_a_convnet()
+#make_a_convnet()
+
+
+
+def test_linear_training():
+    tglin = Linear(3,1,use_bias=False)
+
+    ptlin = torch.nn.Linear(3,1,bias=False)
+
+    ptlin.weight = torch.nn.Parameter(torch.Tensor(np.array(tglin.w)))
+
+    print(tglin.w)
+    print(ptlin.weight)
+    
+    xg = np.array([[1,1,1]])
+
+    yg = np.array([1])
+
+    pto = torch.optim.SGD(ptlin.weight, .01, .9)
+    tgo = SGD([tglin.w],lr=.01)
+
+    xtg = Tensor(xg)
+
+    xpt = torch.Tensor(xg)
+
+
+    y_hattg = tglin(ptlin)
+
+
+
+test_linear_training()
