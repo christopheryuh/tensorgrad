@@ -224,15 +224,28 @@ def test_linear_training():
 
     yg = np.array([1])
 
-    pto = torch.optim.SGD(ptlin.weight, .01, .9)
+    pto = torch.optim.SGD([ptlin.weight], .01, .9)
     tgo = SGD([tglin.w],lr=.01)
 
     xtg = Tensor(xg)
 
     xpt = torch.Tensor(xg)
 
-
     y_hattg = tglin(ptlin)
+
+    lossfntg = Crossentropy()
+
+    losstg = lossfntg(y_hattg, Tensor(yg))
+
+    y_hatpt = ptlin(xpt)
+
+    lossfnpt = torch.nn.CrossEntropyLoss()
+
+    losspt = lossfnpt(y_hatpt, torch.Tensor(yg))
+
+    assert np.isclose(losstg.numpy, losspt.numpy)
+
+
 
 
 
