@@ -208,7 +208,7 @@ def make_a_convnet():
 
 #make_a_convnet()
 
-
+print("---- testing linear training --- ")
 
 def test_linear_training():
     tglin = Linear(3,1,use_bias=False)
@@ -231,11 +231,14 @@ def test_linear_training():
 
     xpt = torch.Tensor(xg)
 
-    y_hattg = tglin(ptlin)
+    y_hattg = tglin(xtg)
 
     lossfntg = Crossentropy()
 
     losstg = lossfntg(y_hattg, Tensor(yg))
+    
+    print(xpt, ptlin.weight)
+    print(xpt.shape, ptlin.weight.shape)
 
     y_hatpt = ptlin(xpt)
 
