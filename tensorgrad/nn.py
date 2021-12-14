@@ -69,6 +69,11 @@ class Crossentropy():
         out._backward = _backward
         return out
 
+class MSE():
+    def __call__(self, y_hat, y):
+        #TODO: implement MSE with grad
+
+
 
 class Conv2d(WeightedLayer):
     def __init__(self,

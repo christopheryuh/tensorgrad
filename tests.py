@@ -209,10 +209,12 @@ def make_a_convnet():
 
 
 def test_linear_regression():
-    x = np.array([1,2,3,4,5])
+    x = np.array([[1],[2],[3],[4],[5]])
     y = np.array([1,2,3,4,5])
     model = Model([Linear(1,1)])
     print(model.parameters())
     optimizer = SGD(model.parameters(), lr=1)
 
-    model.train(Tensor(x),Tensor(y), optimizer,loss_fn=nn.Crossentropy())
+    model.train(Tensor(x),Tensor(y),loss_fn=MSE(),batch_size=1,optimizer=optimizer,update_after_epoch=True,epochs=5)
+
+test_linear_regression()
