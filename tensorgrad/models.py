@@ -42,13 +42,13 @@ class Model():
 
         if label_depth is not None:
             labels = oneHot(labels.reshape((-1, 1)), depth=label_depth)
-
+        loss = Tensor(0)
         for epoch in range(epochs):
             avg = []
             for t, i in enumerate(range(0, data.shape[0], batch_size)):
                 if t % 10 == 0:
                     print(f'iter {i} / {data.shape[0]}')
-
+                    print(loss.data)
                 x = data[i:i + batch_size]
 
                 y = labels[i:i + batch_size]
@@ -62,13 +62,9 @@ class Model():
                 loss.backward()
 
                 optimizer.step()
+                losslist.append(loss.data)
 
-                avg.append(loss.data)
-
-            if update_after_epoch:
-                losslist.append(sum(avg[-y.shape[0]:]) / y.shape[0])
-                # print('losslist', losslist)
-                print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+            
         if update_after_epoch:
             plt.plot(range(len(losslist)), losslist)
             plt.show()

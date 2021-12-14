@@ -43,7 +43,6 @@ model = Model([
 
 ])
 ```
-
 Here we make the neural network out of 3 linear layers, Relu Activations for the hidden layers, and Sigmoid on the output.
 
 :::note
@@ -63,7 +62,7 @@ optimizer = SGD(model.parameters(),lr=0.1)
 model.train(x, y, loss_fn=nn.Crossentropy(), epochs=10,label_depth=None,batch_size=1,optimizer=optimizer)
 ```
 
-Here we have a SGD optimizer with a learning rate of 1 set on the model's perameters. 
+Here we have a SGD optimizer with a learning rate of .1 set on the model's perameters. 
 
 
 # H1 - Create the best documentation

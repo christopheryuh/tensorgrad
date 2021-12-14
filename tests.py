@@ -174,7 +174,7 @@ def make_a_convnet():
 
     (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
-    train_images = train_images.reshape(-1, 1, 28, 28)/255.0
+    train_images = train_images[:1000].reshape(-1, 1, 28, 28)/255.0
 
     print('got data')
     print(train_labels.shape)
@@ -191,65 +191,28 @@ def make_a_convnet():
     convnet.add(Linear(8 * 7 * 7, 10))
     convnet.add(Softmax())
 
-    print(len(convnet.parameters()))
+    print(convnet.parameters())
 
     print(train_images.shape)
-    print(train_labels.shape)
 
-    optimizer = SGD(convnet.parameters(), lr=0.1)
+    optimizer = SGD(convnet.parameters(), lr=1)
 
     convnet.train(
-        train_images, train_labels,
+        train_images, train_labels[:1000],
         loss_fn=Crossentropy(), label_depth=10, batch_size=100,
         optimizer=optimizer,
+        update_after_epoch=True,
         epochs=5)
-
 
 
 #make_a_convnet()
 
-print("---- testing linear training --- ")
 
-def test_linear_training():
-    tglin = Linear(3,1,use_bias=False)
+def test_linear_regression():
+    x = np.array([1,2,3,4,5])
+    y = np.array([1,2,3,4,5])
+    model = Model([Linear(1,1)])
+    print(model.parameters())
+    optimizer = SGD(model.parameters(), lr=1)
 
-    ptlin = torch.nn.Linear(3,1,bias=False)
-
-    ptlin.weight = torch.nn.Parameter(torch.Tensor(np.array(tglin.w)))
-
-    print(tglin.w)
-    print(ptlin.weight)
-    
-    xg = np.array([[1,1,1]])
-
-    yg = np.array([1])
-
-    pto = torch.optim.SGD([ptlin.weight], .01, .9)
-    tgo = SGD([tglin.w],lr=.01)
-
-    xtg = Tensor(xg)
-
-    xpt = torch.Tensor(xg)
-
-    y_hattg = tglin(xtg)
-
-    lossfntg = Crossentropy()
-
-    losstg = lossfntg(y_hattg, Tensor(yg))
-    
-    print(xpt, ptlin.weight)
-    print(xpt.shape, ptlin.weight.shape)
-
-    y_hatpt = ptlin(xpt)
-
-    lossfnpt = torch.nn.CrossEntropyLoss()
-
-    losspt = lossfnpt(y_hatpt, torch.Tensor(yg))
-
-    assert np.isclose(losstg.numpy, losspt.numpy)
-
-
-
-
-
-test_linear_training()
+    model.train(Tensor(x),Tensor(y), optimizer,loss_fn=nn.Crossentropy())
