@@ -174,7 +174,7 @@ def make_a_convnet():
 
     (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
-    train_images = train_images.reshape(-1, 1, 28, 28)/255.0
+    train_images = train_images[:1000].reshape(-1, 1, 28, 28)/255.0
 
     print('got data')
     print(train_labels.shape)
@@ -191,19 +191,18 @@ def make_a_convnet():
     convnet.add(Linear(8 * 7 * 7, 10))
     convnet.add(Softmax())
 
-    print(len(convnet.parameters()))
+    print(convnet.parameters())
 
     print(train_images.shape)
-    print(train_labels.shape)
 
-    optimizer = SGD(convnet.parameters(), lr=0.1)
+    optimizer = SGD(convnet.parameters(), lr=1)
 
     convnet.train(
-        train_images, train_labels,
+        train_images, train_labels[:1000],
         loss_fn=Crossentropy(), label_depth=10, batch_size=100,
         optimizer=optimizer,
+        update_after_epoch=True,
         epochs=5)
-
 
 
 #make_a_convnet()
@@ -225,6 +224,13 @@ def test_linear_training():
 
     model.train(x,y,optimizer=optim,loss_fn=MSE(),epochs=600,batch_size=1)
 
+def test_linear_regression():
+    x = np.array([[1],[2],[3],[4],[5]])
+    y = np.array([1,2,3,4,5])
+    model = Model([Linear(1,1)])
+    print(model.parameters())
+    optimizer = SGD(model.parameters(), lr=1)
 
+    model.train(Tensor(x),Tensor(y),loss_fn=MSE(),batch_size=1,optimizer=optimizer,update_after_epoch=True,epochs=5)
 
-test_linear_training()
+test_linear_regression()

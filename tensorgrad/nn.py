@@ -75,6 +75,7 @@ class Crossentropy():
         return out
 
 
+
 class Conv2d(WeightedLayer):
     def __init__(self,
                  inputs,
