@@ -7,6 +7,8 @@ from tensorgrad.func import *
 class Tensor():
     def __init__(self, data, _children=(), op=''):
         self.data = np.array(data)
+        if len(self.data.shape) == 0:
+            self.data = self.data.reshape(1) 
         self.shape = self.data.shape
         self.grad = np.zeros_like(self.data).astype(np.float32)
         self._backward = lambda: None
@@ -56,7 +58,8 @@ class Tensor():
 
     def broadcast(self, other):
 
-        out = self
+        if isinstance(other, (float, int)) or (isinstance(other, Tensor) and other.shape == (1,)):
+            return self
 
         other = other if isinstance(other, (Tensor)) else Tensor(other)
 
@@ -122,8 +125,6 @@ class Tensor():
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
-        elif self.shape[-1] in other.shape:
-            pass
         else:
             self = self.broadcast(other)
             other = other.broadcast(self)
@@ -142,8 +143,6 @@ class Tensor():
         other = other if isinstance(other, Tensor) else Tensor(other)
         if self.shape == other.shape:
             pass
-        elif self.shape[-1] in other.shape:
-            pass
         else:
             self = self.broadcast(other)
             other = other.broadcast(self)
@@ -160,18 +159,23 @@ class Tensor():
 
         return out
 
+
     def __pow__(self, other):
-        out = Tensor(self.data**other, _children=(self, other), op='pow')
+        other = float(other)
+        out = Tensor(self.data**other, _children=(self), op='pow')
 
         def _backward():
             self.grad = np.zeros(self.data.shape)
             self.grad += (other * self.data**other - 1) * out.grad
+        
+        out._backward = _backward
+        return out 
 
     def __getitem__(self, other):
         out = Tensor(self.data[other], _children=(self,), op='get item')
 
         def _backward():
-            self.grad[other.data] += out.grad
+            self.grad[other] += out.grad
 
         out._backward = _backward
         return out
@@ -208,10 +212,10 @@ class Tensor():
         return self * other
 
     def __truediv__(self, other):  # self / other
-        return self * other**-1
+        return self * other**-1.0
 
     def __rtruediv__(self, other):  # other / self
-        return other * self**-1
+        return other / self
 
     def __repr__(self):
         return f"Tensor with values:{self.data} and Gradient of:{self.grad} and shape of:{self.shape}"

@@ -69,13 +69,7 @@ class Model():
                 losslist.append(sum(avg[-y.shape[0]:]) / y.shape[0])
                 # print('losslist', losslist)
                 print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
-        if update_after_epoch:
-            plt.plot(range(len(losslist)), losslist)
-            plt.show()
 
         data = np.array(data)
-
-        pred = self(data[0])
-        plt.imshow(data[0].reshape((28, 28)))
+        plt.plot(range(len(data)),data)
         plt.show()
-        print(np.argmax(pred.data))

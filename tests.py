@@ -211,44 +211,19 @@ def make_a_convnet():
 print("---- testing linear training --- ")
 
 def test_linear_training():
-    tglin = Linear(3,1,use_bias=False)
 
-    ptlin = torch.nn.Linear(3,1,bias=False)
+    x = Tensor(np.array([1,2,3,4,5]).reshape(-1,1))
+    y = Tensor(np.array([3,6,9,12,15]))
 
-    ptlin.weight = torch.nn.Parameter(torch.Tensor(np.array(tglin.w)))
-
-    print(tglin.w)
-    print(ptlin.weight)
+    f = Linear(1,1)
     
-    xg = np.array([[1,1,1]])
+    model = Model([f,])
 
-    yg = np.array([1])
+    print(model.parameters())
 
-    pto = torch.optim.SGD([ptlin.weight], .01, .9)
-    tgo = SGD([tglin.w],lr=.01)
+    optim = SGD(model.parameters(),.01)
 
-    xtg = Tensor(xg)
-
-    xpt = torch.Tensor(xg)
-
-    y_hattg = tglin(xtg)
-
-    lossfntg = Crossentropy()
-
-    losstg = lossfntg(y_hattg, Tensor(yg))
-    
-    print(xpt, ptlin.weight)
-    print(xpt.shape, ptlin.weight.shape)
-
-    y_hatpt = ptlin(xpt)
-
-    lossfnpt = torch.nn.CrossEntropyLoss()
-
-    losspt = lossfnpt(y_hatpt, torch.Tensor(yg))
-
-    assert np.isclose(losstg.numpy, losspt.numpy)
-
-
+    model.train(x,y,optimizer=optim,loss_fn=MSE(),epochs=600,batch_size=1)
 
 
 

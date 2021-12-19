@@ -42,6 +42,8 @@ class Activation(Layer):
         return []
 
 
+
+
 class Relu(Activation):
     def __call__(self, x, training=False):
         return x.relu()
@@ -56,6 +58,9 @@ class Softmax(Activation):
     def __call__(self, x, training=False):
         return x.softmax()
 
+class MSE():
+    def __call__(self, y_hat, y):
+        return ((y-y_hat)**2).sum()/np.product(y.shape)
 
 class Crossentropy():
     def __call__(self, y_hat, y):
