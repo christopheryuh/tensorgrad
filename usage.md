@@ -1,6 +1,6 @@
 # Tensorgrad
 
-##Basic math with autograd
+## Basic math with autograd
 
 
 ``` { .py }
@@ -32,7 +32,7 @@ print(a,b,c,x,y)
 ```
 
 
-##Linear Regression with the Model class 
+## Linear Regression with the Model class 
 
 ``` { .py }
 from tensorgrad.models import Model
@@ -59,7 +59,7 @@ Once we have that, we can construct our optimizer with a learning rate of .01.
 With everything created, we can finally train our model. Here we give "model.train" training data and labels, as well as an optimizer and a loss function (to determine the error of the model), we also give 100 epochs, or rounds of training. We also specify a batch size of 4 to save time.	 
 
 
-##Basic Neural Network
+## Basic Neural Network
 
 
 ``` { .py }
@@ -87,6 +87,6 @@ model.train(data, labels, optimizer=optim, loss_fn=MSE, epochs = 100, batch_size
 ```
 Here we do almost the exact same thing as previously, with the addition of two extra Linear layers and activation functions. Adding these layers actually makes this model much more complex. This model suddenly goes from 1 parameter to 35. We also add activation functions, or nonlinearities. In this model, these functions serve mainly to divide the linear layers, stopping them from merging to become 1 linear layer (essentially stoping the communitive property). 
 
-##Convolutions
+## Convolutions
 
 Currently working out errors with Convolution Neural Networks. Check back soon!
