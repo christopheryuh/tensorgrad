@@ -18,7 +18,7 @@ I'm looking to work out some of the kinks in Conv2D in the future, which will al
 
 ## Usage
 
-put docs
+Please refer to Usage.md.
 
 ## Contributing
 
@@ -35,6 +35,4 @@ benjamindkilleen
 * Finish README.md
 * Make sure installation is good
 * Internal Documenation (Docstrings) - Typing annotations
-* Docusaurus Page
 * Unit Tests
-* Public Website
