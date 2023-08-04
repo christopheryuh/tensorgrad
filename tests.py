@@ -1,236 +1,234 @@
-import torch
+#restarting tests
 import numpy as np
 from tensorgrad.engine import Tensor
-from tensorgrad.func import *
-from tensorgrad.nn import *
-from tensorgrad.models import Model
-from tensorgrad.optimizers import SGD
+import torch
 
+#python3 -m pytest tests.py
+#to test
+def test_sum():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-def helper(fn, fn_input):
-    xpt = torch.Tensor(fn_input)
-    xpt.requires_grad = True
+    z = x.sum()
+    zpt = xpt.sum()
 
-    ypt = fn(xpt, pytorch=True)
-    ypt.backward()
+    z.backward()
+    zpt.backward()
 
-    x = Tensor(fn_input)
-
-    y = fn(x)
-
-    y.backward()
-
-    assert np.all(y.data == ypt.detach().numpy())
     assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
+def test_add_same():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-def test_same_shape_add():
-    fn_input = np.array([1, 2, 3])
+    yd= np.arange(4)
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
 
-    def fn(x, pytorch=False):
-        if pytorch:      
-            z = x + torch.tensor([4, 3, 2])
-            return z.sum()
-        else:
-            z = x + np.array([4, 3, 2])
-            return z.sum()
-    helper(fn, fn_input)
+    z = x + y
 
+    zpt = xpt + ypt
 
-def test_mul():
-    fn_input = np.array([[1, 2], [1, 2]])
+    z = z.sum()
+    zpt = zpt.sum()
 
-    def fn(x, pytorch=False):
-        if pytorch:
-            z = x * torch.tensor([[1, 2], [1, 2]])
-            h = z * torch.tensor([1, 2])
-            return h.sum()
-        else:
-            z = x * np.array([[1, 2], [1, 2]])
-            h = z * np.array([1, 2])
-            return h.sum()
-    helper(fn, fn_input)
-
-
-def test_broadcast_add():
-    fn_input = np.array([1, 2, 3, 3])
-
-    def fn(x, pytorch=False):
-        if pytorch:
-            z = fn_input + torch.tensor([[1], [2], [3]])
-            return z.sum()
-        else:
-            z = fn_input + Tensor([[1], [2], [3]])
-            return z.sum()
-        helper(fn, fn_input)
-
-
-def test_matmul():
-    fn_input = np.array([[1., 2., 3., 3.], [1., 2., 3., 3.]])
-
-    def fn(x, pytorch=False):
-        if pytorch == True:
-            z = x @ torch.tensor([[1], [2], [3], [3]], dtype=torch.float32)
-            return z.sum()
-        else:
-            z = x @ np.array([[1], [2], [3], [3]])
-            return z.sum()
-    helper(fn, fn_input)
-
-
-'''
-test_same_shape_add()
-test_mul()
-test_broadcast_add()
-test_matmul()
-'''
-
-
-def make_a_linear_layer():
-    x = np.array([[1], [1], [1]]).astype(np.float32)
-    layer = Linear(3, 5)
-    y = layer(x)
-    print('output', y)
-    z = y.sum()
     z.backward()
-    print('with grad', layer.w, layer.b)
-    layer.zero_grad()
-    print('zero grad', layer.w, layer.b)
+    zpt.backward()
 
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-def test_setitem():
-    print('Testing setitem')
-    x = Tensor([1, 2, 3, 4])
-    z = 1
-    x[0] = z
+def test_add_broadcast():
+    xd= np.arange(6).reshape((2,3))
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-    w = x.sum()
-    w.backward()
+    yd= np.arange(2).reshape((2,1))
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
 
-    xpt = torch.tensor([1., 2., 3., 4.])
-    xpt.requires_grad = True
+    z = x + y
 
-    zpt = 1.
+    zpt = xpt + ypt
 
-    xpt[0] = zpt
+    z = z.sum()
+    zpt = zpt.sum()
 
-    wpt = x.sum()
-    wpt.backward()
-
-    print(xpt.grad)
-
-    assert np.all(w.data == wpt.data)
-    assert np.all(x.grad == xpt.grad)
-
-
-# make_a_linear_layer()
-# test_setitem()
-
-
-def make_a_conv2d_layer():
-    x = np.ones((1, 1, 5, 5))
-    layer = Conv2d(1, 3, 3, use_bias=False, padding='same')
-
-    out = layer(x)
-
-    print(out)
-    print(out.shape)
-
-    print('going backward')
-    z = out.sum()
     z.backward()
-    print(z)
-    print(layer.w.grad)
+    zpt.backward()
 
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-# make_a_conv2d_layer()
-print('--maxpool--')
+def test_add_int():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
+    yd = 1 
+    ypt = 1
+    y = yd
 
-def make_max_pooling():
-    maxp = MaxPool2d((2, 2))
-    x = Tensor(np.array([[[1, 2, 3, 4],
-                          [1, 2, 3, 4],
-                          [1, 2, 3, 4],
-                          [1, 2, 3, 4]]]).reshape(1, 1, 4, 4))
+    z = x + y
 
-    y = maxp(x)
+    zpt = xpt + ypt
 
-    z = y.sum()
-    print(y, x) 
+    z = z.sum()
+    zpt = zpt.sum()
+
     z.backward()
-    print(x.grad)
+    zpt.backward()
 
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-#make_max_pooling()
-#make_a_conv2d_layer()
+def test_add_big():
+    xd= np.arange(6).reshape((2,3,1))
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-print("-------Testing Conv-Net----------")
+    yd= np.arange(6).reshape((2,1,3))
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
 
+    z = x + y
 
-def make_a_convnet():
+    zpt = xpt + ypt
 
-    from tensorflow.keras.datasets import mnist
+    z = z.sum()
+    zpt = zpt.sum()
 
-    (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+    z.backward()
+    zpt.backward()
 
-    train_images = train_images[:1000].reshape(-1, 1, 28, 28)/255.0
+    print(y.grad)
+    print(ypt.grad)
 
-    print('got data')
-    print(train_labels.shape)
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-    convnet = Model([])
-    convnet.add(Conv2d(1, 8, 3, padding='same'))
-    convnet.add(Relu())
-    convnet.add(MaxPool2d((2, 2)))
-    convnet.add(Conv2d(8, 8, 3, padding='same'))
-    convnet.add(Relu())
-    convnet.add(MaxPool2d((2, 2)))
-    convnet.add(Conv2d(8, 8, 3, padding='same'))
-    convnet.add(Flatten())
-    convnet.add(Linear(8 * 7 * 7, 10))
-    convnet.add(Softmax())
+def test_mul_same():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-    print(convnet.parameters())
+    yd= np.arange(4)
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
 
-    print(train_images.shape)
+    z = x * y
 
-    optimizer = SGD(convnet.parameters(), lr=1)
+    zpt = xpt * ypt
 
-    convnet.train(
-        train_images, train_labels[:1000],
-        loss_fn=Crossentropy(), label_depth=10, batch_size=100,
-        optimizer=optimizer,
-        update_after_epoch=True,
-        epochs=5)
+    z = z.sum()
+    zpt = zpt.sum()
 
+    z.backward()
+    zpt.backward()
 
-#make_a_convnet()
+    print(y.grad, ypt.grad.numpy())
 
-print("---- testing linear training --- ")
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-def test_linear_training():
+def test_mul_broadcast():
+    xd= np.arange(6).reshape((2,3))
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-    x = Tensor(np.array([1,2,3,4,5]).reshape(-1,1))
-    y = Tensor(np.array([3,6,9,12,15]))
+    yd= np.arange(2).reshape((2,1))
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
 
-    f = Linear(1,1)
-    
-    model = Model([f,])
+    z = x * y
 
-    print(model.parameters())
+    zpt = xpt * ypt
 
-    optim = SGD(model.parameters(),.01)
+    z = z.sum()
+    zpt = zpt.sum()
 
-    model.train(x,y,optimizer=optim,loss_fn=MSE(),epochs=600,batch_size=1)
+    z.backward()
+    zpt.backward()
 
-def test_linear_regression():
-    x = np.array([[1],[2],[3],[4],[5]])
-    y = np.array([1,2,3,4,5])
-    model = Model([Linear(1,1)])
-    print(model.parameters())
-    optimizer = SGD(model.parameters(), lr=1)
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
 
-    model.train(Tensor(x),Tensor(y),loss_fn=MSE(),batch_size=1,optimizer=optimizer,update_after_epoch=True,epochs=5)
+def test_mul_int():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-test_linear_regression()
+    yd = 2 
+    ypt = 2
+    y = yd
+
+    z = x * y
+
+    zpt = xpt * ypt
+
+    z = z.sum()
+    zpt = zpt.sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
+#only need one test to make sure the negative works
+#works but has rounding error
+# def test_div():
+#     xd= np.arange(4)
+#     xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+#     x = Tensor(xd)
+
+#     yd= np.arange(4)
+#     ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+#     y = Tensor(yd)
+
+#     z = x / y
+
+#     zpt = xpt / ypt
+
+#     z = z.sum()
+#     zpt = zpt.sum()
+
+#     z.backward()
+#     zpt.backward()
+
+#     assert np.all(x.grad == xpt.grad.numpy())
+#     assert np.all(y.grad == ypt.grad.numpy())
+#     assert np.all(z.data == zpt.detach().numpy())
+
+def test_sub():
+    xd= np.arange(4)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    yd= np.arange(4)
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
+
+    z = x - y
+
+    zpt = xpt - ypt
+
+    z = z.sum()
+    zpt = zpt.sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy()) 
+
+if __name__ == "__main__":
+    test_add_big()

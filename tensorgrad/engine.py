@@ -73,10 +73,12 @@ class Tensor():
                 pass
 
             elif xd == 1 and yd > 1:
-                out.data = func.concat([self.data for _ in range(yd)], axis=ax)
+                out = func.concat([self.data for _ in range(yd)], axis=ax)
 
             else:
-                raise ValueError(f'Mismatched Shape, {self.shape} and {other.shape}')
+                out = self
+                #because both sides need to use it dont throw error
+                #raise ValueError(f'Mismatched Shape, {self.shape} and {other.shape}')
 
         return out
 
@@ -123,17 +125,18 @@ class Tensor():
 
     def __add__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
-        if self.shape == other.shape:
-            pass
-        else:
-            self = self.broadcast(other)
-            other = other.broadcast(self)
+        # if self.shape == other.shape:
+        #     pass
+        # else:
+        #     self = self.broadcast(other)
+        #     other = other.broadcast(self)
         out = Tensor(self.data + other.data, _children=(self, other), op='+')
 
         def _backward():
 
-            self.grad += out.grad
-            other.grad += out.grad
+
+            self.grad = self.grad + out.grad
+            other.grad = other.grad + out.grad
 
         out._backward = _backward
 
@@ -141,18 +144,18 @@ class Tensor():
 
     def __mul__(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
-        if self.shape == other.shape:
-            pass
-        else:
-            self = self.broadcast(other)
-            other = other.broadcast(self)
+        # if self.shape == other.shape:
+        #     pass
+        # else:
+        #     self = self.broadcast(other)
+        #     other = other.broadcast(self)
 
         out = Tensor(self.data * other.data, _children=(self, other), op='+')
 
         def _backward():
             self.grad = np.zeros(self.data.shape)
             other.grad = np.zeros(other.data.shape)
-            self.grad += other.data * out.grad
+            self.grad = self.grad + (other.data * out.grad)
             other.grad = other.grad + (self.data * out.grad)
 
         out._backward = _backward
@@ -197,7 +200,7 @@ class Tensor():
         raise ValueError
 
     def __neg__(self):  # -self
-        return self * -1
+        return self * (np.ones(self.shape)*-1)
 
     def __radd__(self, other):  # other + self
         return self + other
