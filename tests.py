@@ -61,6 +61,8 @@ def test_add_broadcast():
     z.backward()
     zpt.backward()
 
+    print(y.grad,ypt.grad)
+
     assert np.all(x.grad == xpt.grad.numpy())
     assert np.all(y.grad == ypt.grad.numpy())
     assert np.all(z.data == zpt.detach().numpy())
@@ -106,8 +108,8 @@ def test_add_big():
     z.backward()
     zpt.backward()
 
-    print(y.grad)
-    print(ypt.grad)
+    print(x.grad)
+    print(xpt.grad)
 
     assert np.all(x.grad == xpt.grad.numpy())
     assert np.all(y.grad == ypt.grad.numpy())

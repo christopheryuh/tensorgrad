@@ -133,10 +133,34 @@ class Tensor():
         out = Tensor(self.data + other.data, _children=(self, other), op='+')
 
         def _backward():
+            
 
-
+            print(self.grad.shape,out.grad.shape)
             self.grad = self.grad + out.grad
-            other.grad = other.grad + out.grad
+            if self.grad.shape == out.grad.shape:
+                self.grad = self.grad + out.grad
+            
+            else:
+                axises = ()
+                for ax in range(len(self.grad.shape)):
+                    if out.grad.shape[ax] > self.grad.shape[ax]:
+                        axises = axises + (ax,)
+
+                self.grad = (self.grad + out.grad).sum(axis=axises)
+
+
+            if other.grad.shape == out.grad.shape:
+                other.grad = other.grad + out.grad
+            
+            else:
+                axises = ()
+                for ax in range(len(other.grad.shape)):
+                    if out.grad.shape[ax] > other.grad.shape[ax]:
+                        axises = axises + (ax,)
+
+                other.grad = (other.grad + out.grad).sum(axis=axises)
+                #print(other.grad.shape)
+            
 
         out._backward = _backward
 
