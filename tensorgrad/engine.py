@@ -96,7 +96,7 @@ class Tensor():
         out = Tensor(1 / (1 + np.exp(self.data)))
 
         def _backward():
-            self.grad += ((1 - out.data) * out.data) * out.grad
+            self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
         out._backward = _backward
 
         return out
@@ -106,7 +106,12 @@ class Tensor():
         ex = np.exp(x)
         out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
         def _backward():
-            self.grad = out.grad * np.sum((out.data - 1 / np.exp(self.data)),axis=-1, keepdims=True)
+            #self.grad = out.grad * np.sum(((out.data - 1) / np.exp(self.data)),axis=-1, keepdims=True)
+            self.grad = out.grad * out.data *(1 - out.data)
+
+            
+
+
 
         out._backward = _backward
         return out
@@ -189,7 +194,7 @@ class Tensor():
 
         def _backward():
             self.grad = np.zeros(self.data.shape)
-            self.grad += (other * self.data**other - 1) * out.grad
+            self.grad = self.grad + (other * (self.data**(other - 1))) * out.grad
         
         out._backward = _backward
         return out 

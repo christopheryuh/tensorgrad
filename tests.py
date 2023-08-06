@@ -230,5 +230,91 @@ def test_sub():
     assert np.all(y.grad == ypt.grad.numpy())
     assert np.all(z.data == zpt.detach().numpy()) 
 
+def test_dot():
+    xd= np.arange(6).reshape((2,3))
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    yd= np.arange(9).reshape((3,3))
+    ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
+    y = Tensor(yd)
+
+    z = x @ y
+
+    zpt = xpt @ ypt
+
+    z = z.sum()
+    zpt = zpt.sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(x.grad == xpt.grad.numpy())
+    assert np.all(y.grad == ypt.grad.numpy())
+    assert np.all(z.data == zpt.detach().numpy())
+
+def test_pow():
+    xd = np.arange(3)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    z  = (x**2).sum()
+    zpt = (xpt**2).sum()
+
+    z.backward()
+    zpt.backward()
+
+
+    print(x.grad,xpt.grad)
+    assert np.all(z.data == zpt.detach().numpy())
+    assert np.all(x.grad == xpt.grad.numpy())
+
+def test_relu():
+    xd = np.arange(10)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    z = (x.relu()).sum()
+    zpt = (torch.relu(xpt)).sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(z.data == zpt.detach().numpy())
+    assert np.all(x.grad == xpt.grad.numpy())
+def test_sigmoid():
+    xd = np.arange(10)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    z = (x.sigmoid()).sum()
+    zpt = (torch.sigmoid(xpt)).sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(z.data == zpt.detach().numpy())
+    assert np.all(x.grad == xpt.grad.numpy())
+
+def test_softmax():
+    xd = np.arange(10)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
+
+    z = (x.softmax()).sum()
+    zpt = (torch.softmax(xpt,-1)).sum()
+
+
+    z.backward()
+    zpt.backward()
+
+    print((x.grad-xpt.grad.numpy()).sum())
+
+    #assert np.all(z.data == zpt.detach().numpy())
+    assert np.all(x.grad == xpt.grad.numpy())
+
+
+
+
 if __name__ == "__main__":
-    test_add_big()
+    test_pow()
