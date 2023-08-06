@@ -133,33 +133,18 @@ class Tensor():
         out = Tensor(self.data + other.data, _children=(self, other), op='+')
 
         def _backward():
-            
-
-            print(self.grad.shape,out.grad.shape)
-            self.grad = self.grad + out.grad
             if self.grad.shape == out.grad.shape:
                 self.grad = self.grad + out.grad
             
             else:
-                axises = ()
-                for ax in range(len(self.grad.shape)):
-                    if out.grad.shape[ax] > self.grad.shape[ax]:
-                        axises = axises + (ax,)
-
-                self.grad = (self.grad + out.grad).sum(axis=axises)
+                self.grad = self.grad + _sum_over_axis(out.grad.copy(),self.grad.shape)
 
 
             if other.grad.shape == out.grad.shape:
                 other.grad = other.grad + out.grad
             
             else:
-                axises = ()
-                for ax in range(len(other.grad.shape)):
-                    if out.grad.shape[ax] > other.grad.shape[ax]:
-                        axises = axises + (ax,)
-
-                other.grad = (other.grad + out.grad).sum(axis=axises)
-                #print(other.grad.shape)
+                other.grad = other.grad + _sum_over_axis(out.grad.copy(),other.grad.shape)
             
 
         out._backward = _backward
@@ -177,10 +162,21 @@ class Tensor():
         out = Tensor(self.data * other.data, _children=(self, other), op='+')
 
         def _backward():
+
             self.grad = np.zeros(self.data.shape)
             other.grad = np.zeros(other.data.shape)
-            self.grad = self.grad + (other.data * out.grad)
-            other.grad = other.grad + (self.data * out.grad)
+            
+            if (other.data * out.grad).shape == self.grad.shape:
+                self.grad = self.grad + (other.data * out.grad)
+            else:
+                self.grad = self.grad + _sum_over_axis(other.data * out.grad,self.grad.shape)
+
+            if (self.data * out.grad).shape == other.grad.shape:
+                other.grad = other.grad + (self.data * out.grad)
+            else:
+                other.grad = other.grad + _sum_over_axis(self.data * out.grad,other.grad.shape)
+
+            
 
         out._backward = _backward
 
@@ -246,3 +242,11 @@ class Tensor():
 
     def __repr__(self):
         return f"Tensor with values:{self.data} and Gradient of:{self.grad} and shape of:{self.shape}"
+
+#used for backprop
+def _sum_over_axis(x,shape):#x will be the out.grad,shape will be the shape it needs to be summed to
+        axises = ()
+        for ax in range(len(shape)):
+            if x.shape[ax] > shape[ax]:
+                axises = axises + (ax,)
+        return x.sum(axis=axises).reshape(shape)

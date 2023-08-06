@@ -108,13 +108,11 @@ def test_add_big():
     z.backward()
     zpt.backward()
 
-    print(x.grad)
-    print(xpt.grad)
-
+    print(x.grad.shape,xpt.grad.shape)
+    assert np.all(z.data == zpt.detach().numpy())
     assert np.all(x.grad == xpt.grad.numpy())
     assert np.all(y.grad == ypt.grad.numpy())
-    assert np.all(z.data == zpt.detach().numpy())
-
+    
 def test_mul_same():
     xd= np.arange(4)
     xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)

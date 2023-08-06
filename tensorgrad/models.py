@@ -71,6 +71,6 @@ class Model():
                 # print('losslist', losslist)
                 print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
 
-        data = np.array(data)
-        plt.plot(range(len(data)), data)
+        data = np.array(avg)
+        plt.plot(range(len(avg)), avg)
         plt.show()
