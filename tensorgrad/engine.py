@@ -93,10 +93,11 @@ class Tensor():
         return out
 
     def sigmoid(self):
-        out = Tensor(1 / (1 + np.exp(self.data)))
+        out = Tensor(1 / (1 + np.exp(-1*self.data)))
 
         def _backward():
-            self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
+            #self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
+            self.grad = self.grad + ((out.data)*(1 - out.data))*out.grad
         out._backward = _backward
 
         return out
