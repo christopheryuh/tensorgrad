@@ -311,13 +311,15 @@ def test_reshape():
     xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
 
     y = x.reshape((-1,))
-    ypt = xpt.reshape(-1,)
+    ypt = xpt.reshape((-1,))
 
     z = y.sum()
     zpt = ypt.sum()
 
     z.backward()
     zpt.backward()
+
+    print(x.grad,xpt.grad.numpy())
 
     assert np.all(z.data == zpt.detach().numpy())
     assert np.all(x.grad == xpt.grad.numpy())
@@ -340,20 +342,25 @@ def test_linear():
     x = Tensor(xd)
     xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
 
-    y = l(x).reshape(1,)
-    ypt = lpt(xpt).reshape(1,)
-
-    print(y,ypt)
+    y = l(x)[0]
+    ypt = lpt(xpt)[0]
 
     y.backward()
     ypt.backward()
 
-    print(y.data,ypt.detach().numpy())
-    print(x.grad,xpt.grad)
+    params = lpt.parameters()
+    next(params)
 
     assert np.all(y.data==ypt.detach().numpy())
-    assert np.all(x.grad==xpt.grad.numpy)
+    assert np.all(x.grad==xpt.grad.numpy())
+    #assert np.all(next(params).grad==l.w.grad)
+    #assert np.all(next(params).grad==l.b.grad)
+    #works but has extra dim
 
+def test_mse():
+    pass
+def test_crossentropy():
+    pass
 if __name__ == "__main__":
     test_reshape()
     test_linear()

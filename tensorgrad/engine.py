@@ -49,9 +49,9 @@ class Tensor():
 
     def reshape(self, shape):
         out = Tensor(self.data.reshape(shape))
-        
         def _backward():
-            self.grad = out.grad.reshape(self.data.shape)
+            #self.grad = out.grad.reshape(self.data.shape)
+            self.grad = np.ones_like(self.grad) * np.array(out.grad).reshape(self.grad.shape)
         out._backward = _backward
 
         return out
