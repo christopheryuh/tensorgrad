@@ -1,6 +1,7 @@
 #restarting tests
 import numpy as np
 from tensorgrad.engine import Tensor
+from tensorgrad import nn
 import torch
 
 #python3 -m pytest tests.py
@@ -182,30 +183,8 @@ def test_mul_int():
 
     assert np.all(x.grad == xpt.grad.numpy())
     assert np.all(z.data == zpt.detach().numpy())
-#only need one test to make sure the negative works
-#works but has rounding error
-# def test_div():
-#     xd= np.arange(4)
-#     xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
-#     x = Tensor(xd)
 
-#     yd= np.arange(4)
-#     ypt = torch.tensor(yd, requires_grad=True,dtype=torch.float32)
-#     y = Tensor(yd)
-
-#     z = x / y
-
-#     zpt = xpt / ypt
-
-#     z = z.sum()
-#     zpt = zpt.sum()
-
-#     z.backward()
-#     zpt.backward()
-
-#     assert np.all(x.grad == xpt.grad.numpy())
-#     assert np.all(y.grad == ypt.grad.numpy())
-#     assert np.all(z.data == zpt.detach().numpy())
+#Div tests: passed,
 
 def test_sub():
     xd= np.arange(4)
@@ -326,9 +305,55 @@ def test_relu():
 #     print(x.grad,xpt.grad.numpy())
 
 #     assert np.all(x.grad == xpt.grad.numpy())
+def test_reshape():
+    xd = np.arange(9).reshape(3,3)
+    x = Tensor(xd)
+    xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
+
+    y = x.reshape((-1,))
+    ypt = xpt.reshape(-1,)
+
+    z = y.sum()
+    zpt = ypt.sum()
+
+    z.backward()
+    zpt.backward()
+
+    assert np.all(z.data == zpt.detach().numpy())
+    assert np.all(x.grad == xpt.grad.numpy())
 
 
 
+
+
+def test_linear():
+    lpt = torch.nn.Linear(5,1)
+
+    for param in lpt.parameters():
+        param.data = torch.nn.parameter.Parameter(torch.ones_like(param))
+
+    l = nn.Linear(5,1)
+    l.w.data = np.ones_like(l.w.data)
+    l.b.data = np.ones_like(l.b.data)
+
+    xd = np.arange(5).reshape(1,-1)
+    x = Tensor(xd)
+    xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
+
+    y = l(x).reshape(1,)
+    ypt = lpt(xpt).reshape(1,)
+
+    print(y,ypt)
+
+    y.backward()
+    ypt.backward()
+
+    print(y.data,ypt.detach().numpy())
+    print(x.grad,xpt.grad)
+
+    assert np.all(y.data==ypt.detach().numpy())
+    assert np.all(x.grad==xpt.grad.numpy)
 
 if __name__ == "__main__":
-    test_pow()
+    test_reshape()
+    test_linear()
