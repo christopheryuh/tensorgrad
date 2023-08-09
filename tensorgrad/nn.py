@@ -9,7 +9,7 @@ from tensorgrad.func import glorot_uniform, assign, zeros
 
 from abc import ABC, abstractmethod
 
-epsilon = .001
+epsilon = 1e-7
 
 
 class Layer(ABC):
@@ -65,11 +65,11 @@ class MSE():
 class Crossentropy():
     def __call__(self, y_hat, y):
         labels = np.array(y)
-        out = Tensor(-1 * labels * np.log(y_hat.data + epsilon))
+        out = Tensor(-1*np.sum(labels*np.log(y_hat+epsilon)))
         out = out.sum()
 
         def _backward():
-            y_hat.grad += -1 * labels * (y_hat.data + epsilon)
+            y_hat.grad += -1 * labels * 1/(y_hat.data)
 
         out._backward = _backward
         return out

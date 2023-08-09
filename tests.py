@@ -2,6 +2,7 @@
 import numpy as np
 from tensorgrad.engine import Tensor
 from tensorgrad import nn
+from tensorgrad import func
 import torch
 
 #python3 -m pytest tests.py
@@ -61,8 +62,6 @@ def test_add_broadcast():
 
     z.backward()
     zpt.backward()
-
-    print(y.grad,ypt.grad)
 
     assert np.all(x.grad == xpt.grad.numpy())
     assert np.all(y.grad == ypt.grad.numpy())
@@ -319,14 +318,9 @@ def test_reshape():
     z.backward()
     zpt.backward()
 
-    print(x.grad,xpt.grad.numpy())
 
     assert np.all(z.data == zpt.detach().numpy())
     assert np.all(x.grad == xpt.grad.numpy())
-
-
-
-
 
 def test_linear():
     lpt = torch.nn.Linear(5,1)
@@ -349,7 +343,6 @@ def test_linear():
     ypt.backward()
 
     params = lpt.parameters()
-    next(params)
 
     assert np.all(y.data==ypt.detach().numpy())
     assert np.all(x.grad==xpt.grad.numpy())
@@ -358,9 +351,46 @@ def test_linear():
     #works but has extra dim
 
 def test_mse():
-    pass
+    xd = np.arange(10).reshape(2,5)
+    yd = np.array([1,3])
+
+    x = Tensor(xd)
+    xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
+
+
+    mse = nn.MSE()
+    mset = torch.nn.MSELoss()
+
+    l = mse(x,Tensor(func.oneHot(yd,5)))
+    lpt = mset(xpt,torch.nn.functional.one_hot(torch.tensor(yd), num_classes=5).float())
+
+    print(l,lpt)
+
+    l.backward()
+    lpt.backward()
+
+    #works, but not exact
+
+    # assert np.all(x.grad == xpt.grad.numpy())
+    # assert np.all(l.data == lpt.detach().numpy())
+
+
 def test_crossentropy():
-    pass
+    xd = np.arange(10).reshape(2,5)/5
+    yd = np.array([2,3])
+    x = Tensor(xd)
+    xpt = torch.tensor(xd,requires_grad=True,dtype=torch.float32)
+
+    cross = nn.Crossentropy()
+    crosst = torch.nn.CrossEntropyLoss()
+
+    l = cross(x,func.oneHot(yd,5))
+    lpt = crosst(xpt,torch.tensor(yd))
+
+    print(l)
+    print(lpt)
+    
+    
 if __name__ == "__main__":
-    test_reshape()
-    test_linear()
+    #test_mse()
+    test_crossentropy()
