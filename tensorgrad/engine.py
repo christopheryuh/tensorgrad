@@ -103,16 +103,13 @@ class Tensor():
         return out
 
     def softmax(self):
+        raise NotImplementedError("errors with softmax are being fixed")
         x = self.data - np.max(self.data)           # shift for numerical stability
         ex = np.exp(x)
         out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
         def _backward():
             #self.grad = out.grad * np.sum(((out.data - 1) / np.exp(self.data)),axis=-1, keepdims=True)
-            #self.grad = out.grad * out.data *(1 - out.data)
-
-            s = out.data.reshape(self.data.shape[0],-1,1)
-            self.grad = out.grad * (np.diagflat(s) - np.dot(s, s.T))
-
+            self.grad = out.grad * out.data *(1 - out.data)
 
 
         out._backward = _backward
@@ -256,4 +253,5 @@ def _sum_over_axis(x,shape):#x will be the out.grad,shape will be the shape it n
         for ax in range(len(shape)):
             if x.shape[ax] > shape[ax]:
                 axises = axises + (ax,)
+        print(x.shape,shape)
         return x.sum(axis=axises).reshape(shape)

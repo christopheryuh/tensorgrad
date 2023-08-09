@@ -294,12 +294,20 @@ def test_softmax():
     #assert np.all(z.data == zpt.detach().numpy())
     print(z,zpt)
 
-    z = z.sum()
-    zpt = zpt.sum()
+    z = z
+    zpt = zpt
 
+    ld = np.zeros(3)
+    ld[1]=1.
 
-    z.backward()
-    zpt.backward()
+    mse = nn.MSE()
+    mset = torch.nn.MSELoss()
+
+    l = mse(z,Tensor(ld))
+    lpt = mset(zpt,torch.tensor(ld).float())
+
+    l.backward()
+    lpt.backward()
 
     print(x.grad,xpt.grad.numpy())
 
@@ -390,12 +398,8 @@ def test_crossentropy():
     l.backward()
     lpt.backward()
 
-    print(l)
-    print(lpt)
-    print(x.grad)
-    print(xpt.grad.numpy())    
+    print(l,lpt)
     
 if __name__ == "__main__":
-    test_softmax()
-    #test_mse()
+    test_mse()
     #test_crossentropy()

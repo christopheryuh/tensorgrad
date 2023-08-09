@@ -63,9 +63,10 @@ class MSE():
         return ((y-y_hat)**2).sum()/np.product(y.shape)
 
 class Crossentropy():
+    raise NotImplementedError("errors with Crossentropy are being fixed")
     def __call__(self, y_hat, y):
         labels = np.array(y)
-        out = Tensor(-1*np.sum(labels*np.log(y_hat+epsilon)))
+        out = Tensor(-np.sum(labels*np.log(y_hat)))
 
         def _backward():
             #y_hat.grad += -1 * labels * 1/(y_hat.data)
