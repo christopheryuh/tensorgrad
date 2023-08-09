@@ -66,11 +66,10 @@ class Crossentropy():
     def __call__(self, y_hat, y):
         labels = np.array(y)
         out = Tensor(-1*np.sum(labels*np.log(y_hat+epsilon)))
-        out = out.sum()
 
         def _backward():
-            y_hat.grad += -1 * labels * 1/(y_hat.data)
-
+            #y_hat.grad += -1 * labels * 1/(y_hat.data)
+            y_hat.grad += labels-y_hat
         out._backward = _backward
         return out
 

@@ -108,9 +108,10 @@ class Tensor():
         out =  Tensor(ex / np.sum(ex,axis=-1,keepdims=True))
         def _backward():
             #self.grad = out.grad * np.sum(((out.data - 1) / np.exp(self.data)),axis=-1, keepdims=True)
-            self.grad = out.grad * out.data *(1 - out.data)
+            #self.grad = out.grad * out.data *(1 - out.data)
 
-            
+            s = out.data.reshape(self.data.shape[0],-1,1)
+            self.grad = out.grad * (np.diagflat(s) - np.dot(s, s.T))
 
 
 
