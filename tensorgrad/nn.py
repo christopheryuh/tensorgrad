@@ -60,11 +60,12 @@ class Softmax(Activation):
 
 class MSE():
     def __call__(self, y_hat, y):
+        y = Tensor(y)
         return ((y-y_hat)**2).sum()/np.product(y.shape)
 
 class Crossentropy():
-    raise NotImplementedError("errors with Crossentropy are being fixed")
     def __call__(self, y_hat, y):
+        raise NotImplementedError("errors with Crossentropy are being fixed")
         labels = np.array(y)
         out = Tensor(-np.sum(labels*np.log(y_hat)))
 

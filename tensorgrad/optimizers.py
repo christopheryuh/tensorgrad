@@ -15,11 +15,11 @@ class Optimizer(object):
         self.momentum = momentum
         self.lr = lr
         self.parameters = parameters
-        self._running_mean = [np.empty_like(p.grad) for p in self.parameters]
+        self._running_mean = [np.empty_like(p.grad) for p in self.parameters()]
         self._num_steps = 0
 
     def zero_grad(self):
-        for param in self.parameters:
+        for param in self.parameters():
             param.grad.fill(0)
 
     def step(self):
@@ -28,7 +28,7 @@ class Optimizer(object):
         self._num_steps += 1
 
     def _update_running_mean(self):
-        for i, p in enumerate(self.parameters):
+        for i, p in enumerate(self.parameters()):
             if self._num_steps == 0:
                 self._running_mean[i] = p.grad.copy()
             elif self.momentum is None:
@@ -41,6 +41,6 @@ class Optimizer(object):
 class SGD(Optimizer):
     def step(self):
         super(SGD, self).step()
-        for i, param in enumerate(self.parameters):
+        for i, param in enumerate(self.parameters()):
             param.data -= self.lr * self._running_mean[i]
 

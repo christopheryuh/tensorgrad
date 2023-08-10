@@ -253,5 +253,4 @@ def _sum_over_axis(x,shape):#x will be the out.grad,shape will be the shape it n
         for ax in range(len(shape)):
             if x.shape[ax] > shape[ax]:
                 axises = axises + (ax,)
-        print(x.shape,shape)
         return x.sum(axis=axises).reshape(shape)

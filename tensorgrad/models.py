@@ -46,31 +46,30 @@ class Model():
         for epoch in range(epochs):
             avg = []
             for t, i in enumerate(range(0, data.shape[0], batch_size)):
-                if t % 10 == 0:
-                    print(f'iter {i} / {data.shape[0]}')
-                    print(loss.data)
+                # if t % 10 == 0:
+                #     print(f'iter {i} / {data.shape[0]}')
+                #     print(loss.data)
                 x = data[i:i + batch_size]
 
                 y = labels[i:i + batch_size]
+
+                optimizer.zero_grad()
 
                 y_hat = self(x)
 
                 loss = loss_fn(y_hat, y)
 
-                optimizer.zero_grad()
-
                 loss.backward()
 
                 optimizer.step()
-                losslist.append(loss.data)
-
                 avg.append(loss.data)
+                
 
             if update_after_epoch:
-                losslist.append(sum(avg[-y.shape[0]:]) / y.shape[0])
+                losslist.append(np.array(avg).sum()/len(avg))
                 # print('losslist', losslist)
-                print(f"epoch:{epoch}/tloss:{sum(losslist[-y.shape[0]:])/y.shape[0]}")
+                print(f"epoch:{epoch}\tloss:{losslist[-1]}")
 
-        data = np.array(avg)
-        plt.plot(range(len(avg)), avg)
+        ll = np.array(losslist)
+        plt.plot(range(len(ll)), ll)
         plt.show()

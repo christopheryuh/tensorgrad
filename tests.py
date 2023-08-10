@@ -402,4 +402,3 @@ def test_crossentropy():
     
 if __name__ == "__main__":
     test_mse()
-    #test_crossentropy()
