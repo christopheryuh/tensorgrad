@@ -5,6 +5,7 @@ from tensorgrad.nn import *
 from matplotlib import pyplot as plt
 
 import numpy as np
+from tqdm import tqdm
 
 
 class Model():
@@ -28,7 +29,7 @@ class Model():
                 params.append(param)
         return params
 
-    def train(self, data, labels, optimizer=None, loss_fn=None, epochs=1, batch_size=16,
+    def train(self, data, labels, optimizer=None,loss_fn=None, epochs=1, batch_size=16,
               label_depth=None, update_after_epoch=True):
         assert loss_fn is not None
 
@@ -45,15 +46,14 @@ class Model():
         loss = Tensor(0)
         for epoch in range(epochs):
             avg = []
-            for t, i in enumerate(range(0, data.shape[0], batch_size)):
+            for t, i in tqdm(enumerate(range(0, data.shape[0], batch_size))):
                 # if t % 10 == 0:
                 #     print(f'iter {i} / {data.shape[0]}')
                 #     print(loss.data)
+                optimizer.zero_grad()
                 x = data[i:i + batch_size]
 
                 y = labels[i:i + batch_size]
-
-                optimizer.zero_grad()
 
                 y_hat = self(x)
 

@@ -54,7 +54,7 @@ def oneHot(x,depth=None):
     zeros = np.zeros((x.shape[0],depth))
     x = x.reshape((-1,))
     for idx,val in enumerate(x):
-        zeros[idx][val] = 1
+        zeros[idx][val] = 1.
 
     return zeros
 
