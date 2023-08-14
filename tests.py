@@ -264,24 +264,26 @@ def test_relu():
     print(x.grad,xpt.grad.numpy())
     assert np.all(x.grad == xpt.grad.numpy())
     
-# def test_sigmoid():
-#     xd = np.arange(5)
-#     xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
-#     x = Tensor(xd)
+def test_sigmoid():
+    xd = np.arange(5)
+    xpt = torch.tensor(xd, requires_grad=True,dtype=torch.float32)
+    x = Tensor(xd)
 
-#     z = (x.sigmoid())
-#     zpt = (torch.sigmoid(xpt))
+    z = (x.sigmoid())
+    zpt = (torch.sigmoid(xpt))
 
-#     #assert np.all(z.data == zpt.detach().numpy())
+    #assert np.all(z.data == zpt.detach().numpy())
+    print(z,zpt)
 
-#     z = z.sum()
-#     zpt = zpt.sum()
+    z = z.sum()
+    zpt = zpt.sum()
 
-#     z.backward()
-#     zpt.backward()
+    z.backward()
+    zpt.backward()
 
-#     assert np.all(x.grad == xpt.grad.numpy())
-#sigmoid is fine but rounds differently
+    print(x.grad,xpt.grad.numpy())
+
+    #assert np.all(x.grad == xpt.grad.numpy())
 
 def test_softmax():
     xd = np.arange(3)
@@ -382,7 +384,6 @@ def test_mse():
     # assert np.all(x.grad == xpt.grad.numpy())
     # assert np.all(l.data == lpt.detach().numpy())
 
-
 def test_crossentropy():
     xd = (np.arange(10).reshape(2,5)/5)+1e-8
     yd = np.array([2,3])
@@ -401,4 +402,4 @@ def test_crossentropy():
     print(l,lpt)
     
 if __name__ == "__main__":
-    test_mse()
+    test_sigmoid()

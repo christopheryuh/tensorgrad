@@ -44,6 +44,7 @@ class Model():
         if label_depth is not None:
             labels = oneHot(labels.reshape((-1, 1)), depth=label_depth)
         loss = Tensor(0)
+        all_loss = []
         for epoch in range(epochs):
             avg = []
             for t, i in tqdm(enumerate(range(0, data.shape[0], batch_size))):
@@ -63,13 +64,14 @@ class Model():
 
                 optimizer.step()
                 avg.append(loss.data)
-                
+                all_loss.append(loss.data)
 
             if update_after_epoch:
                 losslist.append(np.array(avg).sum()/len(avg))
                 # print('losslist', losslist)
                 print(f"epoch:{epoch}\tloss:{losslist[-1]}")
+                #print(prev-y_hat.data[-1])
 
-        ll = np.array(losslist)
+        ll = np.array(all_loss)
         plt.plot(range(len(ll)), ll)
         plt.show()

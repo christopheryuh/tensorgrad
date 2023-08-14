@@ -203,7 +203,8 @@ class Linear(WeightedLayer):
     def __init__(self, n_in, n_out, use_bias=True):
         self.use_bias = use_bias
         self.has_vars = True
-        self.w = glorot_uniform(n_in, n_out, size=(n_in, n_out))
+        #self.w = glorot_uniform(n_in, n_out, size=(n_in, n_out))
+        self.w = Tensor(np.random.normal(size=(n_in,n_out)))
         self.b = zeros((1, n_out))
 
     def parameters(self):
@@ -214,11 +215,12 @@ class Linear(WeightedLayer):
             return [self.w, ]
 
     def __call__(self, x, training=False):
+        print("LINEAR")
         x = x if isinstance(x, (Tensor)) else Tensor(x)
-        x = x @ self.w
+        x = x.matmul(self.w)
         if self.use_bias: 
             x = x + self.b
-
+        print("W",self.w)
         return x
 
 

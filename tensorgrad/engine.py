@@ -84,20 +84,23 @@ class Tensor():
 
     def relu(self):
         out = Tensor(np.where(self.data > 0, self.data, 0))
+        print("data,",self.data)
 
         def _backward():
-            self.grad += np.where(self.data < 0, self.grad, self.data) * out.grad
+            self.grad = self.grad+np.where(self.data < 0, self.grad, self.data) * out.grad
+            print("grad",self.grad)
 
         out._backward = _backward
 
         return out
 
     def sigmoid(self):
-        out = Tensor(1 / (1 + np.exp(-1*self.data)))
+        out = Tensor(1 / (1 + np.exp(-self.data)))
 
         def _backward():
             #self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
-            self.grad = self.grad + ((out.data)*(1 - out.data))*out.grad
+            self.grad = ((out.data)*(1 - out.data))*out.grad
+            #print(self.grad)
         out._backward = _backward
 
         return out
@@ -207,13 +210,13 @@ class Tensor():
         out._backward = _backward
         return out
 
-    def __matmul__(self, other):
+    def matmul(self, other):
         other = other if isinstance(other, Tensor) else Tensor(other)
 
         out = Tensor(np.matmul(self.data, other.data), _children=(self, other), op='matmul')
 
         def _backward():
-            self.grad += out.grad @ other.data.T
+            self.grad = self.grad + ( out.grad @ other.data.T)
             other.grad += (out.grad.T @ self.data).T
 
         out._backward = _backward
