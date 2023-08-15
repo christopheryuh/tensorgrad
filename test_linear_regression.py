@@ -10,9 +10,8 @@ y = y/100
 
 model = Model(
     [
-        nn.Linear(1,3,use_bias=True),
-        nn.Sigmoid(),
-        #nn.Sigmoid(),
+        nn.Linear(1,1,use_bias=True),
+        #nn.Relu(),
         
     ]
 )

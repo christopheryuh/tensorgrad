@@ -215,12 +215,10 @@ class Linear(WeightedLayer):
             return [self.w, ]
 
     def __call__(self, x, training=False):
-        print("LINEAR")
         x = x if isinstance(x, (Tensor)) else Tensor(x)
         x = x.matmul(self.w)
         if self.use_bias: 
             x = x + self.b
-        print("W",self.w)
         return x
 
 

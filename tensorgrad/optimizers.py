@@ -44,6 +44,5 @@ class SGD(Optimizer):
         for i, param in enumerate(self.parameters()):
             #param.data -= self.lr * self._running_mean[i]
             #using simple grad subtraction while testing
-            before = param.data.copy()
             print(param.grad)
             param.data = param.data - (self.lr*param.grad)

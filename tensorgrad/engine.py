@@ -84,12 +84,10 @@ class Tensor():
 
     def relu(self):
         out = Tensor(np.where(self.data > 0, self.data, 0))
-        print("data,",self.data)
 
         def _backward():
             self.grad = self.grad+np.where(self.data < 0, self.grad, self.data) * out.grad
-            print("grad",self.grad)
-
+            print("g,",self.grad)
         out._backward = _backward
 
         return out
@@ -100,7 +98,7 @@ class Tensor():
         def _backward():
             #self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
             self.grad = ((out.data)*(1 - out.data))*out.grad
-            #print(self.grad)
+            print("g,",self.grad)
         out._backward = _backward
 
         return out
