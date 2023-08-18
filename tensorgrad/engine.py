@@ -83,22 +83,20 @@ class Tensor():
         return out
 
     def relu(self):
-        out = Tensor(np.where(self.data > 0, self.data, 0))
+        out = Tensor(np.where(self.data > 0, self.data, 0),_children=(self,), op='relu')
 
         def _backward():
             self.grad = self.grad+np.where(self.data < 0, self.grad, self.data) * out.grad
-            print("g,",self.grad)
         out._backward = _backward
 
         return out
 
     def sigmoid(self):
-        out = Tensor(1 / (1 + np.exp(-self.data)))
+        out = Tensor(1 / (1 + np.exp(-self.data)),_children=(self,), op='sigmoid')
 
         def _backward():
             #self.grad = self.grad + ((1 - out.data) * out.data) * out.grad
             self.grad = ((out.data)*(1 - out.data))*out.grad
-            print("g,",self.grad)
         out._backward = _backward
 
         return out

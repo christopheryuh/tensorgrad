@@ -72,6 +72,7 @@ class Model():
                 print(f"epoch:{epoch}\tloss:{losslist[-1]}")
                 #print(prev-y_hat.data[-1])
 
-        ll = np.array(all_loss)
+
+        ll = np.array(losslist)
         plt.plot(range(len(ll)), ll)
         plt.show()
